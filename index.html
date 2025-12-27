@@ -378,99 +378,9 @@
         var currentChunkIndex = 0;
         var videoId = '';
         var checkInterval;
+        var chunks = []; // Chunks reais do video
 
-        // Dados mockados para demonstracao (em producao viria da IA)
-        const mockChunks = [
-            {
-                start: 0,
-                end: 15,
-                original: "Hey guys, welcome back to the channel. Today we're going to talk about something really interesting.",
-                translation: "E ai pessoal, bem-vindos de volta ao canal. Hoje vamos falar sobre algo muito interessante.",
-                explanation: "'Welcome back' e uma expressao muito comum usada por criadores de conteudo para cumprimentar espectadores que ja conhecem o canal. 'We're going to' e uma forma comum de expressar futuro em ingles informal.",
-                vocab: [
-                    { word: "welcome back", meaning: "bem-vindo de volta" },
-                    { word: "channel", meaning: "canal" },
-                    { word: "we're going to", meaning: "nos vamos / iremos" }
-                ],
-                exercise: {
-                    question: "Como se diz 'bem-vindo de volta' em ingles?",
-                    options: ["Come back", "Welcome back", "Back welcome", "Return welcome"],
-                    correct: 1
-                }
-            },
-            {
-                start: 15,
-                end: 30,
-                original: "I've been working on this project for a while now, and I'm really excited to share it with you.",
-                translation: "Eu tenho trabalhado neste projeto por um tempo, e estou muito animado para compartilhar com voces.",
-                explanation: "'I've been working' usa o Present Perfect Continuous, indicando uma acao que comecou no passado e continua ate agora. 'For a while' significa 'por um tempo' - expressao muito util no dia a dia.",
-                vocab: [
-                    { word: "I've been working", meaning: "tenho trabalhado" },
-                    { word: "for a while", meaning: "por um tempo" },
-                    { word: "excited", meaning: "animado/empolgado" },
-                    { word: "share", meaning: "compartilhar" }
-                ],
-                exercise: {
-                    question: "Qual tempo verbal e usado em 'I've been working'?",
-                    options: ["Simple Past", "Present Perfect Continuous", "Simple Present", "Future"],
-                    correct: 1
-                }
-            },
-            {
-                start: 30,
-                end: 45,
-                original: "Before we dive in, make sure to hit that subscribe button and turn on notifications.",
-                translation: "Antes de comecarmos, certifique-se de apertar o botao de inscrever e ativar as notificacoes.",
-                explanation: "'Dive in' e uma expressao idiomatica que significa 'mergulhar de cabeca' ou 'comecar'. 'Make sure to' e usado para dar instrucoes ou conselhos. 'Hit' aqui significa 'apertar/clicar'.",
-                vocab: [
-                    { word: "dive in", meaning: "mergulhar / comecar" },
-                    { word: "make sure", meaning: "certifique-se" },
-                    { word: "hit", meaning: "apertar / clicar" },
-                    { word: "subscribe", meaning: "inscrever-se" }
-                ],
-                exercise: {
-                    question: "O que significa 'dive in' neste contexto?",
-                    options: ["Nadar", "Pular na agua", "Comecar/Entrar no assunto", "Mergulhar"],
-                    correct: 2
-                }
-            },
-            {
-                start: 45,
-                end: 60,
-                original: "So let's get started. The first thing you need to know is that this isn't as hard as it looks.",
-                translation: "Entao vamos comecar. A primeira coisa que voce precisa saber e que isso nao e tao dificil quanto parece.",
-                explanation: "'Let's get started' e uma forma muito comum de iniciar algo. 'Isn't as hard as it looks' usa a estrutura comparativa 'as... as' para dizer que algo nao e tao dificil quanto aparenta.",
-                vocab: [
-                    { word: "let's get started", meaning: "vamos comecar" },
-                    { word: "the first thing", meaning: "a primeira coisa" },
-                    { word: "as hard as", meaning: "tao dificil quanto" },
-                    { word: "it looks", meaning: "parece / aparenta" }
-                ],
-                exercise: {
-                    question: "Complete: 'This isn't ___ hard ___ it looks'",
-                    options: ["so / than", "as / as", "more / than", "too / as"],
-                    correct: 1
-                }
-            },
-            {
-                start: 60,
-                end: 75,
-                original: "I'll walk you through everything step by step, so don't worry if you're a complete beginner.",
-                translation: "Eu vou te guiar por tudo passo a passo, entao nao se preocupe se voce for um iniciante completo.",
-                explanation: "'Walk you through' e um phrasal verb que significa guiar alguem por um processo. 'Step by step' significa 'passo a passo'. 'Complete beginner' e alguem totalmente iniciante.",
-                vocab: [
-                    { word: "walk you through", meaning: "te guiar / explicar" },
-                    { word: "step by step", meaning: "passo a passo" },
-                    { word: "don't worry", meaning: "nao se preocupe" },
-                    { word: "beginner", meaning: "iniciante" }
-                ],
-                exercise: {
-                    question: "O que significa 'walk you through'?",
-                    options: ["Caminhar com voce", "Te guiar/explicar passo a passo", "Andar por ai", "Passear junto"],
-                    correct: 1
-                }
-            }
-        ];
+        const API_URL = 'http://localhost:5000';
 
         function onYouTubeIframeAPIReady() {
             // API pronta, mas so cria o player quando o usuario colar o link
@@ -482,7 +392,7 @@
             return (match && match[2].length === 11) ? match[2] : null;
         }
 
-        function loadVideo() {
+        async function loadVideo() {
             const url = document.getElementById('youtube-url').value;
             videoId = extractVideoId(url);
 
@@ -491,30 +401,90 @@
                 return;
             }
 
-            document.getElementById('welcome').style.display = 'none';
-            document.getElementById('main-content').classList.add('active');
+            // Mostra loading
+            document.getElementById('welcome').innerHTML = '<h2>Carregando legendas...</h2><p>Buscando transcricao do video...</p>';
 
-            if (player) {
-                player.loadVideoById(videoId);
-            } else {
-                player = new YT.Player('player', {
-                    height: '100%',
-                    width: '100%',
-                    videoId: videoId,
-                    playerVars: {
-                        'playsinline': 1,
-                        'rel': 0,
-                        'modestbranding': 1
-                    },
-                    events: {
-                        'onReady': onPlayerReady,
-                        'onStateChange': onPlayerStateChange
-                    }
-                });
+            try {
+                // Busca legendas reais do backend
+                const response = await fetch(`${API_URL}/api/transcript/${videoId}`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Erro ao buscar legendas');
+                }
+
+                // Transforma os chunks em formato para exibicao
+                chunks = data.chunks.map(chunk => ({
+                    start: chunk.start,
+                    end: chunk.end,
+                    original: chunk.text,
+                    translation: '(Traducao sera gerada pela IA no MVP)',
+                    explanation: 'Analise do trecho sera gerada pela IA no MVP. Por enquanto, pratique ouvindo e lendo a legenda original.',
+                    vocab: extractKeyWords(chunk.text),
+                    exercise: generateSimpleExercise(chunk.text)
+                }));
+
+                document.getElementById('welcome').style.display = 'none';
+                document.getElementById('main-content').classList.add('active');
+
+                if (player) {
+                    player.loadVideoById(videoId);
+                } else {
+                    player = new YT.Player('player', {
+                        height: '100%',
+                        width: '100%',
+                        videoId: videoId,
+                        playerVars: {
+                            'playsinline': 1,
+                            'rel': 0,
+                            'modestbranding': 1
+                        },
+                        events: {
+                            'onReady': onPlayerReady,
+                            'onStateChange': onPlayerStateChange
+                        }
+                    });
+                }
+
+                currentChunkIndex = 0;
+                updateChunkDisplay();
+
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('welcome').innerHTML = `
+                    <h2>Erro ao carregar legendas</h2>
+                    <p>${error.message}</p>
+                    <p style="margin-top: 10px; font-size: 0.9rem;">Verifique se o servidor backend esta rodando (python server.py)</p>
+                `;
             }
+        }
 
-            currentChunkIndex = 0;
-            updateChunkDisplay();
+        // Extrai palavras-chave simples do texto (versao basica)
+        function extractKeyWords(text) {
+            const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
+            const unique = [...new Set(words)].slice(0, 4);
+            return unique.map(word => ({
+                word: word,
+                meaning: '(definicao via IA no MVP)'
+            }));
+        }
+
+        // Gera um exercicio simples baseado no texto
+        function generateSimpleExercise(text) {
+            const words = text.split(' ').filter(w => w.length > 3);
+            if (words.length < 4) {
+                return {
+                    question: 'Repita o trecho em voz alta para praticar a pronuncia.',
+                    options: ['Feito!', 'Repetir audio', 'Pular', 'Preciso de ajuda'],
+                    correct: 0
+                };
+            }
+            const randomWord = words[Math.floor(Math.random() * words.length)].replace(/[^a-zA-Z]/g, '');
+            return {
+                question: `Qual palavra voce ouviu no trecho?`,
+                options: [randomWord, 'another', 'something', 'different'].sort(() => Math.random() - 0.5),
+                correct: [randomWord, 'another', 'something', 'different'].sort(() => Math.random() - 0.5).indexOf(randomWord)
+            };
         }
 
         function onPlayerReady(event) {
@@ -522,7 +492,6 @@
         }
 
         function onPlayerStateChange(event) {
-            // Quando o video esta tocando, verifica se passou do fim do chunk
             if (event.data === YT.PlayerState.PLAYING) {
                 clearInterval(checkInterval);
                 checkInterval = setInterval(checkChunkEnd, 500);
@@ -532,9 +501,9 @@
         }
 
         function checkChunkEnd() {
-            if (!player) return;
+            if (!player || chunks.length === 0) return;
             const currentTime = player.getCurrentTime();
-            const chunk = mockChunks[currentChunkIndex];
+            const chunk = chunks[currentChunkIndex];
 
             if (currentTime >= chunk.end) {
                 player.pauseVideo();
@@ -543,16 +512,18 @@
         }
 
         function playCurrentChunk() {
-            const chunk = mockChunks[currentChunkIndex];
+            if (chunks.length === 0) return;
+            const chunk = chunks[currentChunkIndex];
             player.seekTo(chunk.start, true);
             player.playVideo();
         }
 
         function updateChunkDisplay() {
-            const chunk = mockChunks[currentChunkIndex];
+            if (chunks.length === 0) return;
+            const chunk = chunks[currentChunkIndex];
 
             document.getElementById('current-chunk').textContent = currentChunkIndex + 1;
-            document.getElementById('total-chunks').textContent = mockChunks.length;
+            document.getElementById('total-chunks').textContent = chunks.length;
 
             document.getElementById('subtitle-original').textContent = chunk.original;
             document.getElementById('subtitle-translation').textContent = chunk.translation;
@@ -570,17 +541,18 @@
             // Exercicio
             document.getElementById('exercise-question').textContent = chunk.exercise.question;
             const optionsContainer = document.getElementById('exercise-options');
+            const correctIndex = chunk.exercise.options.indexOf(chunk.exercise.options[chunk.exercise.correct]);
             optionsContainer.innerHTML = chunk.exercise.options.map((opt, i) => `
                 <button onclick="checkAnswer(${i}, ${chunk.exercise.correct})">${opt}</button>
             `).join('');
 
             // Botoes
             document.getElementById('prev-btn').disabled = currentChunkIndex === 0;
-            document.getElementById('next-btn').disabled = currentChunkIndex === mockChunks.length - 1;
+            document.getElementById('next-btn').disabled = currentChunkIndex === chunks.length - 1;
         }
 
         function nextChunk() {
-            if (currentChunkIndex < mockChunks.length - 1) {
+            if (currentChunkIndex < chunks.length - 1) {
                 currentChunkIndex++;
                 updateChunkDisplay();
                 playCurrentChunk();
