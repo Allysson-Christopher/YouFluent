@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouFluent - Aprenda Inglês com YouTube</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .input-section input {
+            width: 500px;
+            padding: 15px 20px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background: #0f0f1a;
+            color: #fff;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-section input:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+
+        .input-section button {
+            padding: 15px 30px;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            border: none;
+            border-radius: 10px;
+            color: #1a1a2e;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .input-section button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 217, 255, 0.3);
+        }
+
+        .main-content {
+            display: none;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+        }
+
+        .main-content.active {
+            display: grid;
+        }
+
+        .video-section {
+            background: #0f0f1a;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .chunk-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+            background: #1a1a2e;
+        }
+
+        .chunk-controls button {
+            padding: 10px 25px;
+            border: 2px solid #00d9ff;
+            background: transparent;
+            color: #00d9ff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .chunk-controls button:hover {
+            background: #00d9ff;
+            color: #1a1a2e;
+        }
+
+        .chunk-controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .chunk-indicator {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .lesson-panel {
+            background: #0f0f1a;
+            border-radius: 15px;
+            padding: 25px;
+            height: fit-content;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .lesson-panel h2 {
+            color: #00d9ff;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle-box {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #00d9ff;
+        }
+
+        .subtitle-box .original {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .subtitle-box .translation {
+            color: #888;
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section h3 {
+            color: #00ff88;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section p {
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .vocab-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .vocab-item {
+            background: #1a1a2e;
+            padding: 12px 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .vocab-item .word {
+            color: #00d9ff;
+            font-weight: bold;
+        }
+
+        .vocab-item .meaning {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .exercise-box {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .exercise-box p {
+            margin-bottom: 15px;
+        }
+
+        .exercise-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .exercise-options button {
+            padding: 12px 15px;
+            background: transparent;
+            border: 2px solid #333;
+            color: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .exercise-options button:hover {
+            border-color: #00d9ff;
+            background: rgba(0, 217, 255, 0.1);
+        }
+
+        .exercise-options button.correct {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.2);
+        }
+
+        .exercise-options button.wrong {
+            border-color: #ff4757;
+            background: rgba(255, 71, 87, 0.2);
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .welcome-message h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #888;
+        }
+
+        .repeat-btn {
+            background: #00ff88 !important;
+            border-color: #00ff88 !important;
+            color: #1a1a2e !important;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .input-section {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .input-section input {
+                width: 100%;
+                max-width: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>YouFluent</h1>
+            <p>Transforme qualquer video do YouTube em uma aula de ingles personalizada</p>
+        </header>
+
+        <div class="input-section">
+            <input type="text" id="youtube-url" placeholder="Cole o link do YouTube aqui...">
+            <button onclick="loadVideo()">Criar Aula</button>
+        </div>
+
+        <div class="welcome-message" id="welcome">
+            <h2>Cole um link do YouTube para comecar</h2>
+            <p>Exemplo: https://www.youtube.com/watch?v=dQw4w9WgXcQ</p>
+        </div>
+
+        <div class="main-content" id="main-content">
+            <div class="video-section">
+                <div class="video-wrapper">
+                    <div id="player"></div>
+                </div>
+                <div class="chunk-controls">
+                    <button onclick="prevChunk()" id="prev-btn">Anterior</button>
+                    <button onclick="repeatChunk()" class="repeat-btn">Repetir</button>
+                    <span class="chunk-indicator">Trecho <span id="current-chunk">1</span> de <span id="total-chunks">5</span></span>
+                    <button onclick="nextChunk()" id="next-btn">Proximo</button>
+                </div>
+            </div>
+
+            <div class="lesson-panel">
+                <h2>Aula do Trecho</h2>
+
+                <div class="subtitle-box">
+                    <div class="original" id="subtitle-original">Loading...</div>
+                    <div class="translation" id="subtitle-translation">Carregando...</div>
+                </div>
+
+                <div class="section">
+                    <h3>Explicacao</h3>
+                    <p id="explanation">Loading...</p>
+                </div>
+
+                <div class="section">
+                    <h3>Vocabulario</h3>
+                    <div class="vocab-list" id="vocab-list">
+                        <!-- Vocab items here -->
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>Exercicio</h3>
+                    <div class="exercise-box">
+                        <p id="exercise-question">Loading...</p>
+                        <div class="exercise-options" id="exercise-options">
+                            <!-- Options here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // YouTube IFrame API
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        var player;
+        var currentChunkIndex = 0;
+        var videoId = '';
+        var checkInterval;
+
+        // Dados mockados para demonstracao (em producao viria da IA)
+        const mockChunks = [
+            {
+                start: 0,
+                end: 15,
+                original: "Hey guys, welcome back to the channel. Today we're going to talk about something really interesting.",
+                translation: "E ai pessoal, bem-vindos de volta ao canal. Hoje vamos falar sobre algo muito interessante.",
+                explanation: "'Welcome back' e uma expressao muito comum usada por criadores de conteudo para cumprimentar espectadores que ja conhecem o canal. 'We're going to' e uma forma comum de expressar futuro em ingles informal.",
+                vocab: [
+                    { word: "welcome back", meaning: "bem-vindo de volta" },
+                    { word: "channel", meaning: "canal" },
+                    { word: "we're going to", meaning: "nos vamos / iremos" }
+                ],
+                exercise: {
+                    question: "Como se diz 'bem-vindo de volta' em ingles?",
+                    options: ["Come back", "Welcome back", "Back welcome", "Return welcome"],
+                    correct: 1
+                }
+            },
+            {
+                start: 15,
+                end: 30,
+                original: "I've been working on this project for a while now, and I'm really excited to share it with you.",
+                translation: "Eu tenho trabalhado neste projeto por um tempo, e estou muito animado para compartilhar com voces.",
+                explanation: "'I've been working' usa o Present Perfect Continuous, indicando uma acao que comecou no passado e continua ate agora. 'For a while' significa 'por um tempo' - expressao muito util no dia a dia.",
+                vocab: [
+                    { word: "I've been working", meaning: "tenho trabalhado" },
+                    { word: "for a while", meaning: "por um tempo" },
+                    { word: "excited", meaning: "animado/empolgado" },
+                    { word: "share", meaning: "compartilhar" }
+                ],
+                exercise: {
+                    question: "Qual tempo verbal e usado em 'I've been working'?",
+                    options: ["Simple Past", "Present Perfect Continuous", "Simple Present", "Future"],
+                    correct: 1
+                }
+            },
+            {
+                start: 30,
+                end: 45,
+                original: "Before we dive in, make sure to hit that subscribe button and turn on notifications.",
+                translation: "Antes de comecarmos, certifique-se de apertar o botao de inscrever e ativar as notificacoes.",
+                explanation: "'Dive in' e uma expressao idiomatica que significa 'mergulhar de cabeca' ou 'comecar'. 'Make sure to' e usado para dar instrucoes ou conselhos. 'Hit' aqui significa 'apertar/clicar'.",
+                vocab: [
+                    { word: "dive in", meaning: "mergulhar / comecar" },
+                    { word: "make sure", meaning: "certifique-se" },
+                    { word: "hit", meaning: "apertar / clicar" },
+                    { word: "subscribe", meaning: "inscrever-se" }
+                ],
+                exercise: {
+                    question: "O que significa 'dive in' neste contexto?",
+                    options: ["Nadar", "Pular na agua", "Comecar/Entrar no assunto", "Mergulhar"],
+                    correct: 2
+                }
+            },
+            {
+                start: 45,
+                end: 60,
+                original: "So let's get started. The first thing you need to know is that this isn't as hard as it looks.",
+                translation: "Entao vamos comecar. A primeira coisa que voce precisa saber e que isso nao e tao dificil quanto parece.",
+                explanation: "'Let's get started' e uma forma muito comum de iniciar algo. 'Isn't as hard as it looks' usa a estrutura comparativa 'as... as' para dizer que algo nao e tao dificil quanto aparenta.",
+                vocab: [
+                    { word: "let's get started", meaning: "vamos comecar" },
+                    { word: "the first thing", meaning: "a primeira coisa" },
+                    { word: "as hard as", meaning: "tao dificil quanto" },
+                    { word: "it looks", meaning: "parece / aparenta" }
+                ],
+                exercise: {
+                    question: "Complete: 'This isn't ___ hard ___ it looks'",
+                    options: ["so / than", "as / as", "more / than", "too / as"],
+                    correct: 1
+                }
+            },
+            {
+                start: 60,
+                end: 75,
+                original: "I'll walk you through everything step by step, so don't worry if you're a complete beginner.",
+                translation: "Eu vou te guiar por tudo passo a passo, entao nao se preocupe se voce for um iniciante completo.",
+                explanation: "'Walk you through' e um phrasal verb que significa guiar alguem por um processo. 'Step by step' significa 'passo a passo'. 'Complete beginner' e alguem totalmente iniciante.",
+                vocab: [
+                    { word: "walk you through", meaning: "te guiar / explicar" },
+                    { word: "step by step", meaning: "passo a passo" },
+                    { word: "don't worry", meaning: "nao se preocupe" },
+                    { word: "beginner", meaning: "iniciante" }
+                ],
+                exercise: {
+                    question: "O que significa 'walk you through'?",
+                    options: ["Caminhar com voce", "Te guiar/explicar passo a passo", "Andar por ai", "Passear junto"],
+                    correct: 1
+                }
+            }
+        ];
+
+        function onYouTubeIframeAPIReady() {
+            // API pronta, mas so cria o player quando o usuario colar o link
+        }
+
+        function extractVideoId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function loadVideo() {
+            const url = document.getElementById('youtube-url').value;
+            videoId = extractVideoId(url);
+
+            if (!videoId) {
+                alert('Por favor, insira um link valido do YouTube');
+                return;
+            }
+
+            document.getElementById('welcome').style.display = 'none';
+            document.getElementById('main-content').classList.add('active');
+
+            if (player) {
+                player.loadVideoById(videoId);
+            } else {
+                player = new YT.Player('player', {
+                    height: '100%',
+                    width: '100%',
+                    videoId: videoId,
+                    playerVars: {
+                        'playsinline': 1,
+                        'rel': 0,
+                        'modestbranding': 1
+                    },
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+            }
+
+            currentChunkIndex = 0;
+            updateChunkDisplay();
+        }
+
+        function onPlayerReady(event) {
+            playCurrentChunk();
+        }
+
+        function onPlayerStateChange(event) {
+            // Quando o video esta tocando, verifica se passou do fim do chunk
+            if (event.data === YT.PlayerState.PLAYING) {
+                clearInterval(checkInterval);
+                checkInterval = setInterval(checkChunkEnd, 500);
+            } else {
+                clearInterval(checkInterval);
+            }
+        }
+
+        function checkChunkEnd() {
+            if (!player) return;
+            const currentTime = player.getCurrentTime();
+            const chunk = mockChunks[currentChunkIndex];
+
+            if (currentTime >= chunk.end) {
+                player.pauseVideo();
+                clearInterval(checkInterval);
+            }
+        }
+
+        function playCurrentChunk() {
+            const chunk = mockChunks[currentChunkIndex];
+            player.seekTo(chunk.start, true);
+            player.playVideo();
+        }
+
+        function updateChunkDisplay() {
+            const chunk = mockChunks[currentChunkIndex];
+
+            document.getElementById('current-chunk').textContent = currentChunkIndex + 1;
+            document.getElementById('total-chunks').textContent = mockChunks.length;
+
+            document.getElementById('subtitle-original').textContent = chunk.original;
+            document.getElementById('subtitle-translation').textContent = chunk.translation;
+            document.getElementById('explanation').textContent = chunk.explanation;
+
+            // Vocabulario
+            const vocabList = document.getElementById('vocab-list');
+            vocabList.innerHTML = chunk.vocab.map(v => `
+                <div class="vocab-item">
+                    <span class="word">${v.word}</span>
+                    <span class="meaning">${v.meaning}</span>
+                </div>
+            `).join('');
+
+            // Exercicio
+            document.getElementById('exercise-question').textContent = chunk.exercise.question;
+            const optionsContainer = document.getElementById('exercise-options');
+            optionsContainer.innerHTML = chunk.exercise.options.map((opt, i) => `
+                <button onclick="checkAnswer(${i}, ${chunk.exercise.correct})">${opt}</button>
+            `).join('');
+
+            // Botoes
+            document.getElementById('prev-btn').disabled = currentChunkIndex === 0;
+            document.getElementById('next-btn').disabled = currentChunkIndex === mockChunks.length - 1;
+        }
+
+        function nextChunk() {
+            if (currentChunkIndex < mockChunks.length - 1) {
+                currentChunkIndex++;
+                updateChunkDisplay();
+                playCurrentChunk();
+            }
+        }
+
+        function prevChunk() {
+            if (currentChunkIndex > 0) {
+                currentChunkIndex--;
+                updateChunkDisplay();
+                playCurrentChunk();
+            }
+        }
+
+        function repeatChunk() {
+            playCurrentChunk();
+        }
+
+        function checkAnswer(selected, correct) {
+            const buttons = document.querySelectorAll('#exercise-options button');
+            buttons.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === correct) {
+                    btn.classList.add('correct');
+                } else if (i === selected && selected !== correct) {
+                    btn.classList.add('wrong');
+                }
+            });
+        }
+
+        // Enter para carregar video
+        document.getElementById('youtube-url').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadVideo();
+            }
+        });
+    </script>
+</body>
+</html>
