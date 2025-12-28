@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
     <title>YouFluent - Aprenda Inglês com YouTube</title>
     <style>
         * {
@@ -329,6 +330,7 @@
                 <div class="chunk-controls">
                     <button onclick="prevChunk()" id="prev-btn">Anterior</button>
                     <button onclick="repeatChunk()" class="repeat-btn">Repetir</button>
+                    <button onclick="reloadLesson()" title="Recarregar aula">🔄</button>
                     <span class="chunk-indicator">Trecho <span id="current-chunk">1</span> de <span id="total-chunks">5</span></span>
                     <button onclick="nextChunk()" id="next-btn">Proximo</button>
                 </div>
@@ -418,10 +420,11 @@
                     start: chunk.start,
                     end: chunk.end,
                     original: chunk.text,
-                    translation: '(Traducao sera gerada pela IA no MVP)',
-                    explanation: 'Analise do trecho sera gerada pela IA no MVP. Por enquanto, pratique ouvindo e lendo a legenda original.',
-                    vocab: extractKeyWords(chunk.text),
-                    exercise: generateSimpleExercise(chunk.text)
+                    translation: 'Carregando traducao...',
+                    explanation: 'Carregando explicacao...',
+                    vocab: [{word: '...', meaning: 'Carregando...'}],
+                    exercise: {question: 'Carregando...', options: ['...'], correct: 0},
+                    lessonLoaded: false
                 }));
 
                 document.getElementById('welcome').style.display = 'none';
@@ -459,32 +462,55 @@
             }
         }
 
-        // Extrai palavras-chave simples do texto (versao basica)
-        function extractKeyWords(text) {
-            const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
-            const unique = [...new Set(words)].slice(0, 4);
-            return unique.map(word => ({
-                word: word,
-                meaning: '(definicao via IA no MVP)'
-            }));
-        }
+        // Gera a aula usando IA com retry
+        async function generateLesson(chunkIndex, retryCount = 0) {
+            const chunk = chunks[chunkIndex];
+            if (chunk.lessonLoaded) return;
 
-        // Gera um exercicio simples baseado no texto
-        function generateSimpleExercise(text) {
-            const words = text.split(' ').filter(w => w.length > 3);
-            if (words.length < 4) {
-                return {
-                    question: 'Repita o trecho em voz alta para praticar a pronuncia.',
-                    options: ['Feito!', 'Repetir audio', 'Pular', 'Preciso de ajuda'],
-                    correct: 0
-                };
+            try {
+                const response = await fetch(`${API_URL}/api/generate-lesson`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text: chunk.original})
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.lesson) {
+                    chunk.translation = data.lesson.translation;
+                    chunk.explanation = data.lesson.explanation;
+                    chunk.vocab = data.lesson.vocabulary;
+                    chunk.exercise = data.lesson.exercise;
+                    chunk.lessonLoaded = true;
+                    chunk.loading = false;
+
+                    // Atualiza a tela se ainda estiver no mesmo chunk
+                    if (currentChunkIndex === chunkIndex) {
+                        updateChunkDisplay();
+                    }
+                } else if (retryCount < 4) {
+                    // Retry automatico com delay crescente
+                    const delay = (retryCount + 1) * 2000;
+                    console.log(`Retry ${retryCount + 1} para chunk ${chunkIndex} em ${delay}ms`);
+                    setTimeout(() => generateLesson(chunkIndex, retryCount + 1), delay);
+                } else {
+                    chunk.translation = 'Erro ao carregar - clique em Repetir';
+                    chunk.explanation = 'Tente novamente';
+                    chunk.loading = false;
+                    if (currentChunkIndex === chunkIndex) updateChunkDisplay();
+                }
+            } catch (error) {
+                console.error('Erro ao gerar aula:', error);
+                if (retryCount < 4) {
+                    const delay = (retryCount + 1) * 2000;
+                    setTimeout(() => generateLesson(chunkIndex, retryCount + 1), delay);
+                } else {
+                    chunk.translation = 'Erro ao carregar - clique em Repetir';
+                    chunk.explanation = 'Tente novamente';
+                    chunk.loading = false;
+                    if (currentChunkIndex === chunkIndex) updateChunkDisplay();
+                }
             }
-            const randomWord = words[Math.floor(Math.random() * words.length)].replace(/[^a-zA-Z]/g, '');
-            return {
-                question: `Qual palavra voce ouviu no trecho?`,
-                options: [randomWord, 'another', 'something', 'different'].sort(() => Math.random() - 0.5),
-                correct: [randomWord, 'another', 'something', 'different'].sort(() => Math.random() - 0.5).indexOf(randomWord)
-            };
         }
 
         function onPlayerReady(event) {
@@ -505,7 +531,8 @@
             const currentTime = player.getCurrentTime();
             const chunk = chunks[currentChunkIndex];
 
-            if (currentTime >= chunk.end) {
+            // Para o vídeo quando a legenda termina (com pequena margem)
+            if (currentTime >= chunk.end - 0.3) {
                 player.pauseVideo();
                 clearInterval(checkInterval);
             }
@@ -521,6 +548,22 @@
         function updateChunkDisplay() {
             if (chunks.length === 0) return;
             const chunk = chunks[currentChunkIndex];
+
+            // Carrega a aula via IA se ainda nao foi carregada
+            if (!chunk.lessonLoaded && !chunk.loading) {
+                chunk.loading = true;
+                generateLesson(currentChunkIndex);
+            }
+
+            // Prefetch: carrega o proximo trecho em background
+            if (currentChunkIndex + 1 < chunks.length) {
+                const nextChunk = chunks[currentChunkIndex + 1];
+                if (!nextChunk.lessonLoaded && !nextChunk.loading) {
+                    console.log(`Prefetch iniciado para trecho ${currentChunkIndex + 2}`);
+                    nextChunk.loading = true;
+                    generateLesson(currentChunkIndex + 1);
+                }
+            }
 
             document.getElementById('current-chunk').textContent = currentChunkIndex + 1;
             document.getElementById('total-chunks').textContent = chunks.length;
@@ -569,6 +612,15 @@
 
         function repeatChunk() {
             playCurrentChunk();
+        }
+
+        function reloadLesson() {
+            const chunk = chunks[currentChunkIndex];
+            chunk.lessonLoaded = false;
+            chunk.loading = false;
+            chunk.translation = 'Carregando...';
+            chunk.explanation = 'Carregando...';
+            updateChunkDisplay();
         }
 
         function checkAnswer(selected, correct) {
