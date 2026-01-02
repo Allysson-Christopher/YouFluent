@@ -1,0 +1,13 @@
+# Dominios Directory
+
+Este diretorio contem um dominio/bounded context por arquivo.
+
+Formato: `{dominio-slug}.md`
+
+Exemplo: `user.md`, `order.md`, `payment.md`
+
+Cada arquivo deve conter:
+- Entidades do dominio
+- Value Objects
+- Regras de negocio (invariantes)
+- Eventos de dominio

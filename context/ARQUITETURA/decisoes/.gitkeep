@@ -1,0 +1,14 @@
+# ADRs Directory
+
+Este diretorio contem Architecture Decision Records (ADRs).
+
+Formato: `adr-{numero}-{slug}.md`
+
+Exemplo: `adr-001-escolha-database.md`, `adr-002-auth-jwt.md`
+
+Cada ADR deve conter:
+- Status (Accepted/Proposed/Deprecated)
+- Contexto
+- Decisao
+- Alternativas consideradas
+- Consequencias (positivas, negativas, neutras)

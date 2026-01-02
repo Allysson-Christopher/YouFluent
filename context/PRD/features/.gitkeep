@@ -1,0 +1,7 @@
+# Features Directory
+
+Este diretorio contem uma feature por arquivo.
+
+Formato: `{feature-slug}.md`
+
+Exemplo: `auth.md`, `dashboard.md`, `payments.md`

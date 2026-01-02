@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 from youtube_transcript_api import YouTubeTranscriptApi
 from openai import OpenAI
@@ -213,6 +213,12 @@ Regras:
             'success': False,
             'error': str(e)
         }), 500
+
+
+@app.route('/')
+def index():
+    """Serve o frontend"""
+    return send_file('index.html')
 
 
 if __name__ == '__main__':
