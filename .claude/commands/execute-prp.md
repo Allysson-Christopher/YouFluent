@@ -11,6 +11,10 @@ Implementa uma feature usando o PRP e faz commit ao final.
 > Usar versoes ja definidas em `context/ARQUITETURA/stack.md` e no PRP.
 > A pesquisa de versoes e responsabilidade EXCLUSIVA do `/gerar-arquitetura`.
 
+> **CONTEXT7 MCP:** SEMPRE usar o MCP do Context7 para obter documentacao
+> atualizada de bibliotecas quando encontrar erros, APIs desconhecidas ou
+> comportamentos inesperados. O Context7 tem acesso a docs oficiais atualizadas.
+
 ---
 
 ## CONTEXTO DO PROJETO: YouFluent
@@ -84,11 +88,13 @@ ULTRATHINK:
 - Quais padroes existentes seguir?
 - Quais os riscos e como mitigar?
 - Como validar cada etapa?
+- Quais bibliotecas podem ter APIs novas/diferentes? (consultar Context7)
 ```
 
 - Usar TodoWrite para criar plano de implementacao
 - Identificar patterns do codebase existente
-- Fazer pesquisas adicionais se necessario (WebSearch, Read)
+- **Consultar Context7 MCP** para documentacao atualizada de bibliotecas da stack
+- Fazer pesquisas adicionais se necessario (Read, Grep)
 
 ### Fase 3: Implementar (TDD)
 
@@ -159,9 +165,10 @@ pnpm build
 **Se falhar:**
 1. Ler erro completo
 2. Identificar causa raiz
-3. Corrigir codigo (nao o teste)
-4. Re-executar validacao
-5. Repetir ate passar
+3. **Consultar Context7 MCP** se o erro envolver API de biblioteca
+4. Corrigir codigo (nao o teste)
+5. Re-executar validacao
+6. Repetir ate passar
 
 ### Fase 5: Atualizar PRP com Pos-Implementacao
 
@@ -193,9 +200,13 @@ Adicionar secao no final do PRP.md:
 
 ### Erros Encontrados
 {erros e solucoes ou "Nenhum"}
+{Se usou Context7, mencionar: "Resolvido via Context7 MCP"}
 
 ### Decisoes Tomadas
 {decisoes durante implementacao}
+
+### Context7 Consultado
+{bibliotecas consultadas ou "Nenhuma consulta necessaria"}
 ```
 
 ### Fase 6: Commit (OBRIGATORIO)
@@ -323,6 +334,39 @@ ou
 
 ## Tratamento de Erros
 
+### Uso do Context7 MCP (OBRIGATORIO)
+
+Quando encontrar erros relacionados a bibliotecas da stack, **SEMPRE** consultar
+o Context7 MCP antes de tentar resolver manualmente:
+
+```typescript
+// 1. Resolver ID da biblioteca
+mcp__context7__resolve-library-id({
+  libraryName: "prisma",  // ou next, react, vitest, etc.
+  query: "descricao do problema ou API que precisa consultar"
+})
+
+// 2. Consultar documentacao
+mcp__context7__query-docs({
+  libraryId: "/prisma/docs",  // ID retornado pelo resolve
+  query: "configuracao especifica ou erro encontrado"
+})
+```
+
+**Quando usar Context7:**
+- Erros de TypeScript relacionados a tipos de bibliotecas
+- APIs que mudaram entre versoes (ex: Prisma 6 → 7)
+- Configuracoes que nao funcionam como esperado
+- Padroes recomendados para a versao atual
+- Integracao entre bibliotecas (ex: Prisma + Next.js)
+
+**Bibliotecas principais para consultar:**
+- `/prisma/docs` - Prisma ORM
+- `/vercel/next.js` - Next.js
+- `/tailwindlabs/tailwindcss` - Tailwind CSS
+- `/shadcn-ui/ui` - shadcn/ui
+- `/vitest-dev/vitest` - Vitest
+
 ### Se validacao falhar:
 - NAO fazer commit
 - Corrigir erros
@@ -387,3 +431,4 @@ Antes de considerar completo:
 - **Zustand para estado** - Nao usar React Query, SWR ou tRPC
 - **Zod para validacao** - Em API Routes e forms
 - **Commit completo** - Usar TODAS as secoes do git-workflow.md
+- **Context7 MCP e obrigatorio** - Consultar SEMPRE ao encontrar erros de bibliotecas
