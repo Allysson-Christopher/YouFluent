@@ -1,5 +1,5 @@
-// Schema INICIAL - apenas configuracao, sem models
-// Models serao adicionados nas tasks T-004 (Transcript), T-011 (Lesson)
+// YouFluent Database Schema
+// Prisma 7.x with PostgreSQL
 
 generator client {
   provider = "prisma-client-js"
@@ -7,4 +7,32 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ====================
+// TRANSCRIPT DOMAIN (T-006)
+// ====================
+
+model Transcript {
+  id        String   @id @default(cuid())
+  videoId   String   @unique
+  title     String
+  language  String   @default("en")
+  fullText  String   @db.Text
+  createdAt DateTime @default(now())
+  chunks    Chunk[]
+
+  @@index([videoId])
+}
+
+model Chunk {
+  id           String     @id @default(cuid())
+  index        Int
+  startTime    Float
+  endTime      Float
+  text         String     @db.Text
+  transcriptId String
+  transcript   Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+
+  @@index([transcriptId])
 }

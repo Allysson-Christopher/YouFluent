@@ -83,9 +83,7 @@ describe('YouTubeTranscriptService', () => {
 
     it('should convert milliseconds to seconds', async () => {
       // Arrange
-      const mockTranscriptResponse = [
-        { text: 'Hello world', offset: 5000, duration: 3000 },
-      ]
+      const mockTranscriptResponse = [{ text: 'Hello world', offset: 5000, duration: 3000 }]
 
       vi.mocked(YoutubeTranscript.fetchTranscript).mockResolvedValue(mockTranscriptResponse)
 
@@ -111,7 +109,7 @@ describe('YouTubeTranscriptService', () => {
       // Arrange
       const mockTranscriptResponse = [
         { text: 'Hello &amp; world &lt;test&gt;', offset: 0, duration: 5000 },
-        { text: "It&#39;s &quot;great&quot;", offset: 5000, duration: 3000 },
+        { text: 'It&#39;s &quot;great&quot;', offset: 5000, duration: 3000 },
       ]
 
       vi.mocked(YoutubeTranscript.fetchTranscript).mockResolvedValue(mockTranscriptResponse)
@@ -196,9 +194,7 @@ describe('YouTubeTranscriptService', () => {
 
     it('should handle network errors', async () => {
       // Arrange
-      vi.mocked(YoutubeTranscript.fetchTranscript).mockRejectedValue(
-        new Error('Failed to fetch')
-      )
+      vi.mocked(YoutubeTranscript.fetchTranscript).mockRejectedValue(new Error('Failed to fetch'))
 
       const videoIdResult = VideoId.fromId('network1234')
       if (!videoIdResult.isSuccess) throw new Error('Invalid video ID')
@@ -260,9 +256,7 @@ describe('YouTubeTranscriptService', () => {
 
     it('should return empty title (youtube-transcript does not provide it)', async () => {
       // Arrange
-      const mockTranscriptResponse = [
-        { text: 'Hello world', offset: 0, duration: 5000 },
-      ]
+      const mockTranscriptResponse = [{ text: 'Hello world', offset: 0, duration: 5000 }]
 
       vi.mocked(YoutubeTranscript.fetchTranscript).mockResolvedValue(mockTranscriptResponse)
 
