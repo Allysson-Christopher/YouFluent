@@ -1,0 +1,10 @@
+// Schema INICIAL - apenas configuracao, sem models
+// Models serao adicionados nas tasks T-004 (Transcript), T-011 (Lesson)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
