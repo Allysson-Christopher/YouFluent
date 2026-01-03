@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import type { PlayerAdapter, PlaybackRate } from '../../domain'
 import { DEFAULT_PLAYBACK_RATE } from '../../domain'
+import type { Chunk } from '@/features/transcript/domain/entities/chunk'
 
 /**
  * Player Store State Interface
@@ -41,6 +42,12 @@ interface PlayerStoreState {
   /** Current error, if any */
   error: Error | null
 
+  /** Chunks for navigation (from transcript) */
+  chunks: Chunk[]
+
+  /** Index of the currently active chunk (-1 if none) */
+  activeChunkIndex: number
+
   // ============================================================
   // Setters
   // ============================================================
@@ -66,6 +73,9 @@ interface PlayerStoreState {
   /** Set error */
   setError: (error: Error | null) => void
 
+  /** Set chunks for navigation */
+  setChunks: (chunks: Chunk[]) => void
+
   /** Reset store to initial state */
   reset: () => void
 
@@ -84,6 +94,9 @@ interface PlayerStoreState {
 
   /** Change playback rate */
   changePlaybackRate: (rate: PlaybackRate) => void
+
+  /** Seek to a specific chunk by index */
+  seekToChunk: (index: number) => void
 }
 
 /**
@@ -97,6 +110,8 @@ const initialState = {
   playbackRate: DEFAULT_PLAYBACK_RATE,
   isReady: false,
   error: null,
+  chunks: [] as Chunk[],
+  activeChunkIndex: -1,
 }
 
 /**
@@ -122,7 +137,18 @@ export const usePlayerStore = create<PlayerStoreState>((set, get) => ({
 
   setPlaying: (isPlaying) => set({ isPlaying }),
 
-  setCurrentTime: (currentTime) => set({ currentTime }),
+  setCurrentTime: (currentTime) => {
+    const { chunks } = get()
+    let activeChunkIndex = -1
+
+    if (chunks.length > 0) {
+      activeChunkIndex = chunks.findIndex(
+        (chunk) => currentTime >= chunk.startTime && currentTime < chunk.endTime
+      )
+    }
+
+    set({ currentTime, activeChunkIndex })
+  },
 
   setDuration: (duration) => set({ duration }),
 
@@ -131,6 +157,8 @@ export const usePlayerStore = create<PlayerStoreState>((set, get) => ({
   setReady: (isReady) => set({ isReady }),
 
   setError: (error) => set({ error }),
+
+  setChunks: (chunks) => set({ chunks, activeChunkIndex: -1 }),
 
   reset: () => set(initialState),
 
@@ -157,5 +185,15 @@ export const usePlayerStore = create<PlayerStoreState>((set, get) => ({
     const { adapter } = get()
     adapter?.setPlaybackRate(rate)
     set({ playbackRate: rate })
+  },
+
+  seekToChunk: (index) => {
+    const { chunks, adapter } = get()
+    const chunk = chunks[index]
+
+    if (chunk && adapter) {
+      adapter.seekTo(chunk.startTime)
+      set({ activeChunkIndex: index })
+    }
   },
 }))

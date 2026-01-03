@@ -6,7 +6,7 @@
  */
 
 // Components
-export { VideoPlayer } from './components/video-player'
+export * from './components'
 
 // Stores
 export { usePlayerStore } from './stores/player-store'

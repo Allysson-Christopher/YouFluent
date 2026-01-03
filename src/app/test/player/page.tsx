@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { VideoPlayer } from '@/features/player/presentation'
+import { PlayerTestClient } from './player-test-client'
 
 /**
  * Test Player Page Props
@@ -11,7 +11,7 @@ interface PageProps {
 /**
  * Test Player Page
  *
- * Development-only page for testing the VideoPlayer component.
+ * Development-only page for testing the VideoPlayer and ChunkNavigator components.
  * Access at: /test/player?videoId=<youtube-video-id>
  *
  * Example: /test/player?videoId=dQw4w9WgXcQ
@@ -38,17 +38,21 @@ export default async function TestPlayerPage({ searchParams }: PageProps) {
   return (
     <div className="container mx-auto p-8">
       <h1 className="text-2xl font-bold mb-4">Video Player Test</h1>
-      <p className="text-gray-600 mb-4">
+      <p className="text-gray-600 mb-6">
         Testing video ID: <code className="bg-gray-100 px-2 py-1 rounded">{videoId}</code>
       </p>
-      <div className="max-w-3xl">
-        <Suspense fallback={<div className="aspect-video w-full bg-gray-200 animate-pulse rounded" />}>
-          <VideoPlayer videoId={videoId} />
-        </Suspense>
-      </div>
-      <div className="mt-4 text-sm text-gray-500">
+      <Suspense fallback={
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 aspect-video bg-gray-200 animate-pulse rounded" />
+          <div className="lg:col-span-1 h-96 bg-gray-200 animate-pulse rounded" />
+        </div>
+      }>
+        <PlayerTestClient videoId={videoId} />
+      </Suspense>
+      <div className="mt-6 text-sm text-gray-500">
         <p>Controls are provided by YouTube player.</p>
         <p>Player state is managed by Zustand store.</p>
+        <p>Click on chunks to navigate to specific timestamps.</p>
       </div>
     </div>
   )
