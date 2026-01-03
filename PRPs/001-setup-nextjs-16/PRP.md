@@ -670,24 +670,53 @@ pnpm build
 
 ---
 
-## Post-Implementation Notes
+## Pós-Implementação
 
-> Esta seção será preenchida após a execução do PRP
+**Data:** 2026-01-03
+**Status:** Implementado
+
+### Arquivos Criados/Modificados
+- `package.json` - Configuração do projeto Next.js
+- `next.config.ts` - Configuração do Next.js
+- `tsconfig.json` - TypeScript com strict mode e path aliases
+- `eslint.config.mjs` - ESLint 9 flat config
+- `.prettierrc` - Configuração Prettier
+- `.prettierignore` - Arquivos ignorados pelo Prettier
+- `next-env.d.ts` - Tipos do Next.js
+- `src/app/layout.tsx` - Root layout
+- `src/app/page.tsx` - Página inicial
+- `src/app/globals.css` - Estilos base (placeholder para Tailwind)
+- `src/shared/types/index.ts` - Result pattern e tipos base
+- `src/features/lesson/{domain,application,infrastructure,presentation}/.gitkeep`
+- `src/features/player/{domain,application,infrastructure,presentation}/.gitkeep`
+- `src/features/transcript/{domain,application,infrastructure,presentation}/.gitkeep`
+- `src/shared/components/ui/.gitkeep`
+- `src/shared/lib/.gitkeep`
+
+### Testes
+- Não aplicável nesta tarefa (setup)
+- TDD começa em T-004
+
+### Validation Gates
+- [x] Lint: passou
+- [x] Type-check: passou
+- [x] Format-check: passou
+- [x] Build: passou
+
+### Erros Encontrados e Soluções
+1. **TypeScript verificando pastas externas**: tsconfig.json estava incluindo `use-cases/` e outras pastas com projetos separados. Solução: adicionado ao `exclude` do tsconfig.json.
+2. **Prettier verificando arquivos de contexto**: Arquivos .md e .html existentes não estavam formatados. Solução: adicionados ao `.prettierignore`.
 
 ### Decisões Tomadas Durante Implementação
-
-_A preencher_
-
-### Problemas Encontrados e Soluções
-
-_A preencher_
+1. **Next.js 15.5.9 ao invés de 16**: Next.js 16 não está disponível como versão stable. Instalado 15.5.9 (latest) conforme fallback documentado.
+2. **Configuração manual**: Como a pasta já continha arquivos do framework, optamos por configurar manualmente ao invés de usar create-next-app.
+3. **Exclusão de subprojetos**: Pastas `use-cases/`, `claude-code-full-guide/`, `examples/`, `validation/` excluídas do TypeScript e Prettier para evitar conflitos.
 
 ### Desvios do Plano Original
-
-_A preencher_
+- Nenhum desvio significativo. A única diferença foi a versão do Next.js (15.5.9 vs 16.1.1).
 
 ---
 
-**Nota de Confiança: 9/10**
+**Nota de Confiança: 10/10**
 
-Razão: Tarefa de setup bem definida, stack documentada, sem ambiguidades. Única incerteza é a disponibilidade do Next.js 16 como versão stable (fallback para latest documentado).
+Razão: Implementação concluída com sucesso. Todas as validações passando.
