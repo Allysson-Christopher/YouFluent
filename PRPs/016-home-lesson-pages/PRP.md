@@ -1408,5 +1408,61 @@ pnpm build
 
 ---
 
+## Post-Implementation Notes
+
+### Implementation Summary (2025-01-03)
+
+**Status:** COMPLETED
+
+**Files Created:**
+- `src/shared/components/url-input-form.tsx` - Form for URL input with difficulty selector
+- `src/shared/components/ui/select.tsx` - shadcn Select component (auto-generated)
+- `src/app/lesson/[videoId]/page.tsx` - Main lesson page (Server Component)
+- `src/app/lesson/[videoId]/actions.ts` - Server Actions for lesson generation
+- `src/app/lesson/[videoId]/lesson-provider.tsx` - Client component for Zustand hydration
+- `src/app/lesson/[videoId]/loading.tsx` - Lesson page skeleton
+- `src/app/lesson/[videoId]/error.tsx` - Lesson error boundary
+- `src/app/loading.tsx` - Root loading skeleton
+- `src/app/error.tsx` - Root error boundary
+- `tests/e2e/home.spec.ts` - Home page E2E tests
+- `tests/e2e/lesson-flow.spec.ts` - Lesson flow E2E tests
+
+**Files Modified:**
+- `src/app/layout.tsx` - Added Inter font and updated metadata
+- `src/app/page.tsx` - Implemented Home page with UrlInputForm
+
+### TDD Cycle
+
+This task was primarily Presentation layer (Server-first), so TDD was not strictly applied.
+However, existing Domain and Application tests (402 tests) continue to pass.
+
+### Validation Results
+
+| Gate | Status | Notes |
+|------|--------|-------|
+| pnpm lint | PASS | No warnings |
+| pnpm type-check | PASS | No type errors |
+| pnpm test:unit | PASS | 402 tests passing |
+| pnpm build | PASS | Static + Dynamic routes generated |
+
+### Technical Decisions
+
+1. **Server Actions vs API Routes:** Used Server Actions for lesson generation to keep code colocated
+2. **Entity Serialization:** Domain entities converted to POJOs for client components
+3. **Hydration Pattern:** LessonProvider reconstructs entities from serialized data on client
+4. **Error Handling:** Error boundaries at both root and lesson level for graceful degradation
+5. **E2E Tests:** Some tests skipped due to external API dependencies (YouTube, OpenAI)
+
+### Known Issues
+
+1. E2E tests that require external APIs are skipped (need MSW mocking)
+2. Integration tests for Prisma repositories need running database
+
+### Next Steps
+
+- T-017: Setup production deployment configuration
+
+---
+
 *PRP gerado pelo Context Engineering Framework v2.0*
 *Tarefa: T-016 - Pages - Home + Lesson Page + Routing*
