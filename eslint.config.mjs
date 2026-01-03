@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     'examples/**',
     'validation/**',
     'venv/**',
+    'coverage/**',
   ]),
   {
     rules: {
