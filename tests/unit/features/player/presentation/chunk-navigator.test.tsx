@@ -25,7 +25,6 @@ const mockChunks = [
  * Helper to create mock store implementation
  * Uses 'any' to bypass strict store typing in tests
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createMockStore(
   chunks: typeof mockChunks,
   activeChunkIndex: number,
