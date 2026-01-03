@@ -638,3 +638,78 @@ it('should handle empty response', async () => {
 
 *PRP gerado pelo Context Engineering Framework v2.0*
 *Tarefa: T-012 | Modo: AUTO | Data: 2026-01-03*
+
+---
+
+## Pos-Implementacao
+
+**Data:** 2026-01-03
+**Status:** Implementado
+
+### Arquivos Criados/Modificados
+
+**Criados:**
+- `src/features/lesson/infrastructure/services/prompts/schemas.ts` - Zod schemas for structured outputs
+- `src/features/lesson/infrastructure/services/prompts/exercise-prompt.ts` - Exercise prompt builder
+- `src/features/lesson/infrastructure/services/prompts/vocabulary-prompt.ts` - Vocabulary prompt builder
+- `src/features/lesson/infrastructure/services/openai-lesson-generator.ts` - Main LessonGenerator implementation
+- `src/features/lesson/infrastructure/index.ts` - Barrel export
+- `tests/integration/features/lesson/openai-lesson-generator.test.ts` - Integration tests
+
+**Modificados:**
+- `tests/mocks/openai.ts` - Updated MSW handlers for structured outputs
+- `package.json` - Added openai and zod dependencies
+
+### Testes
+- 15 testes de integracao criados
+- Cobertura Domain: N/A (servico de infraestrutura)
+- Cobertura Application: N/A
+- Cobertura Infrastructure: 100% para OpenAILessonGenerator
+
+### Validation Gates
+- [x] Lint: passou
+- [x] Type-check: passou
+- [x] Unit tests: passou (336 testes)
+- [x] Integration tests: passou (15 testes OpenAILessonGenerator)
+- [x] Build: passou
+
+### Erros Encontrados
+
+1. **Zod v4 vs v3 incompatibilidade**
+   - Causa: Zod 4.x requer import `zod/v3` para compatibilidade com OpenAI SDK
+   - Solucao: Alterado imports para `import { z } from 'zod/v3'`
+   - Resolvido via Context7 MCP
+
+2. **OpenAI SDK error types not exported from main module**
+   - Causa: `LengthFinishReasonError` e `ContentFilterFinishReasonError` nao estao no export principal
+   - Solucao: Importar de `openai/core/error`
+
+3. **Tests timing out on rate limit/API error tests**
+   - Causa: OpenAI SDK retries automaticamente em erros 429 e 5xx
+   - Solucao: Adicionado opcao `maxRetries` ao construtor e usar `maxRetries: 0` nos testes
+
+4. **Result type narrowing em testes**
+   - Causa: TypeScript nao consegue inferir `.value` apos Result.create()
+   - Solucao: Verificar isSuccess antes de acessar value
+
+### Decisoes Tomadas
+
+1. **Usar `zod/v3` para compatibilidade com OpenAI SDK**
+   - OpenAI SDK zodResponseFormat requer Zod v3 API
+   - Zod 4.x inclui compatibilidade via `zod/v3` import
+
+2. **Combinar exercicios e vocabulario em unica chamada API**
+   - Reduz latencia e custo
+   - Schema unificado lessonOutputSchema
+
+3. **Adicionar opcao maxRetries ao construtor**
+   - Permite desabilitar retries para testes
+   - Mantém retrocompatibilidade com signature antiga (string)
+
+4. **Usar MSW para testes de integracao**
+   - Testes determinísticos e rápidos
+   - Suporte a cenários de erro (rate limit, API error, refusal)
+
+### Context7 Consultado
+
+- `/openai/openai-node` - zodResponseFormat usage, structured outputs parsing, error types, retry configuration
