@@ -1,8 +1,7 @@
 import { notFound } from 'next/navigation'
-import { VideoPlayer } from '@/features/player/presentation/components/video-player'
-import { ChunkLessonPanel } from '@/features/lesson/presentation/components/chunk-lesson-panel'
 import { fetchTranscriptAction } from './actions'
 import { LessonProvider } from './lesson-provider'
+import { LessonView } from './lesson-view'
 
 interface LessonPageProps {
   params: Promise<{ videoId: string }>
@@ -11,11 +10,11 @@ interface LessonPageProps {
 /**
  * Lesson Page
  *
- * Simplified layout matching original Python version:
- * - Video player on top
- * - Chunk lesson content below (translation, explanation, vocabulary, exercise)
- * - Auto-pause at chunk end
- * - Navigation buttons (previous/replay/next)
+ * Redesigned with split-screen layout:
+ * - No scrolling needed (100vh)
+ * - Video on left, lesson content on right
+ * - Exercise at bottom (full width)
+ * - Progress bar at top
  *
  * Route: /lesson/[videoId]
  */
@@ -31,7 +30,6 @@ export default async function LessonPage({ params }: LessonPageProps) {
   const result = await fetchTranscriptAction(videoId)
 
   if (!result.success || !result.data) {
-    // Let error.tsx handle this
     throw new Error(result.error?.message || 'Failed to load transcript')
   }
 
@@ -39,18 +37,12 @@ export default async function LessonPage({ params }: LessonPageProps) {
 
   return (
     <LessonProvider data={result.data}>
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Video Title */}
-        <h1 className="text-2xl font-bold mb-4">{transcript.title}</h1>
-
-        {/* Video Player */}
-        <div className="rounded-lg overflow-hidden border bg-card mb-6">
-          <VideoPlayer videoId={videoId} />
-        </div>
-
-        {/* Chunk Lesson Content */}
-        <ChunkLessonPanel transcriptId={transcript.id} />
-      </div>
+      <LessonView
+        videoId={videoId}
+        transcriptId={transcript.id}
+        title={transcript.title}
+        totalChunks={transcript.chunks.length}
+      />
     </LessonProvider>
   )
 }
