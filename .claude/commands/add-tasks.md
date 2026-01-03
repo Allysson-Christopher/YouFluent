@@ -9,6 +9,37 @@ Adiciona novas tarefas **incrementalmente** ao sistema existente.
 
 ---
 
+## CONTEXTO DO PROJETO: YouFluent
+
+### Stack Tecnologica
+| Tecnologia | Versao |
+|------------|--------|
+| Next.js | 16.1.1+ |
+| React | 19.2.x |
+| TypeScript | 5.9.x |
+| Node.js | 20.19+ |
+| Prisma | 7.x (com Driver Adapters) |
+| PostgreSQL | 16 (Docker Compose) |
+| Zustand | 5.x |
+| Zod | latest |
+| Tailwind CSS | v4 |
+| shadcn/ui | 2.5.x |
+
+### Dominios do Projeto
+- **lesson** - Licoes geradas por IA
+- **player** - Player YouTube
+- **transcript** - Transcricoes e cache
+
+### Estrategia de Testes (TDD)
+| Camada | TDD | Cobertura | Ferramentas |
+|--------|-----|-----------|-------------|
+| Domain | Obrigatorio | 100% | Vitest |
+| Application | Recomendado | 80-90% | Vitest + mocks |
+| Infrastructure | Parcial | 60-80% | Vitest + Testcontainers + MSW |
+| Presentation | Nao | E2E apenas | Playwright |
+
+---
+
 ## REGRAS CRITICAS
 
 ### 1. PERGUNTAS COM OPCOES NUMERADAS (OBRIGATORIO)
@@ -53,7 +84,7 @@ Interpreta descricao e sugere tarefas.
 
 ### 3. Modo com Epic Explicito
 ```bash
-/add-tasks --epic="Testes E2E" "testar auth, equipes, tarefas"
+/add-tasks --epic="Testes E2E" "testar player, transcript, lesson"
 ```
 Cria tarefas agrupadas em um Epic.
 
@@ -92,8 +123,9 @@ Proximo ID: T-032
 
 Epics existentes:
 - Setup Inicial (T-001 a T-003)
-- Autenticacao (T-004 a T-007)
-- Equipes (T-008 a T-011)
+- Player YouTube (T-004 a T-007)
+- Transcricoes (T-008 a T-011)
+- Licoes IA (T-012 a T-015)
 - ...
 ```
 
@@ -125,9 +157,9 @@ Digite o numero:"
 PERGUNTA 1.1 - TIPO DE TESTE
 "Que tipo de testes?
 
-1. E2E (Playwright/Cypress)
-2. Integracao
-3. Unit tests
+1. E2E (Playwright)
+2. Integracao (Testcontainers + MSW)
+3. Unit tests (Vitest - TDD)
 4. Todos os tipos
 
 Digite o numero:"
@@ -137,9 +169,9 @@ Digite o numero:"
 PERGUNTA 1.2 - COBERTURA
 "Quais areas cobrir com testes?
 
-1. Todas as features existentes
+1. Todas as features existentes (player, transcript, lesson)
 2. Selecionar features especificas
-3. Area especifica do codigo
+3. Camada especifica (domain, application, infrastructure)
 4. Descrever manualmente
 
 Digite o numero:"
@@ -149,19 +181,15 @@ Se resposta = 1 (Todas as features):
 ```
 PERGUNTA 1.3 - GRANULARIDADE
 "Identificamos estas features:
-- Autenticacao
-- Equipes
-- Investigacoes
-- Tarefas
-- Lembretes
-- Notas e Anexos
-- Colaboracao
+- Player YouTube
+- Transcricoes
+- Licoes IA
 
 Quantas tarefas criar?
 
-1. Uma tarefa por feature (7 tarefas: T-032 a T-038)
+1. Uma tarefa por feature (3 tarefas: T-032 a T-034)
 2. Uma tarefa geral (1 tarefa: T-032)
-3. Agrupar por complexidade (ex: 3 tarefas)
+3. Por camada DDD para cada feature (12 tarefas)
 
 Digite o numero:"
 ```
@@ -173,9 +201,9 @@ PERGUNTA 2.1 - BUGS
 "Descreva os bugs a corrigir (um por linha):
 
 Exemplo:
-- Login nao redireciona apos autenticacao
-- Filtro de tarefas nao persiste
-- Drag and drop quebra em mobile
+- Player nao sincroniza com chunk selecionado
+- Cache de transcricao nao persiste
+- Licao IA gera vocabulario duplicado
 
 Digite os bugs:"
 ```
@@ -186,7 +214,7 @@ Digite os bugs:"
 PERGUNTA 3.1 - FEATURE
 "Descreva a nova feature:
 
-Exemplo: Sistema de notificacoes push com Firebase
+Exemplo: Sistema de progresso do usuario com salvamento local
 
 Digite a descricao:"
 ```
@@ -243,16 +271,12 @@ ANALISE DA DESCRICAO
 Input: "criar testes E2E com Playwright para todas as features"
 
 Tipo identificado: Testes E2E
-Features a cobrir: Todas (7)
+Features a cobrir: Todas (3)
 
 TAREFAS PROPOSTAS:
-1. T-032: E2E - Testes de Autenticacao
-2. T-033: E2E - Testes de Equipes
-3. T-034: E2E - Testes de Investigacoes
-4. T-035: E2E - Testes de Gestao de Tarefas
-5. T-036: E2E - Testes de Lembretes
-6. T-037: E2E - Testes de Notas e Anexos
-7. T-038: E2E - Testes de Colaboracao
+1. T-032: E2E - Testes do Player YouTube
+2. T-033: E2E - Testes de Transcricoes
+3. T-034: E2E - Testes de Licoes IA
 
 Confirma a criacao destas tarefas?
 
@@ -272,7 +296,7 @@ Digite o numero:"
 1. **Criar arquivos T-XXX.md** para cada tarefa
 2. **Atualizar _index.md** com nova secao
 
-### Template T-XXX.md (Testes E2E)
+### Template T-XXX.md (Testes E2E - YouFluent)
 
 ```markdown
 # T-XXX: E2E - Testes de {Feature}
@@ -329,7 +353,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('{Feature}', () => {
   test.beforeEach(async ({ page }) => {
-    // Setup: login, navegacao, etc
+    await page.goto('/')
   })
 
   test('deve {acao principal}', async ({ page }) => {
@@ -354,8 +378,8 @@ test.describe('{Feature}', () => {
 ## Validacao
 
 ```bash
-npx playwright test {feature}.spec.ts
-npx playwright test {feature}.spec.ts --repeat-each=3
+pnpm exec playwright test {feature}.spec.ts
+pnpm exec playwright test {feature}.spec.ts --repeat-each=3
 ```
 
 ---
@@ -364,11 +388,212 @@ npx playwright test {feature}.spec.ts --repeat-each=3
 
 ```
 PRD: features/{feature}
-ARQUITETURA: stack
+ARQUITETURA: stack, decisoes/adr-005-testing-strategy
 ```
 ```
 
-### Template T-XXX.md (Bug Fix)
+### Template T-XXX.md (Unit Tests TDD - YouFluent)
+
+```markdown
+# T-XXX: Unit - Testes de {Camada} para {Feature}
+
+| Campo | Valor |
+|-------|-------|
+| **Tamanho** | M |
+| **Prioridade** | Must Have |
+| **Epic** | Testes TDD |
+| **Depende de** | T-YYY |
+
+---
+
+## Contexto
+
+Testes unitarios TDD para a camada {Domain/Application} da feature {Feature}.
+
+## Objetivo
+
+Cobertura {100%/80-90%} da camada {Domain/Application} com TDD.
+
+## Escopo
+
+- Testes de entidades e value objects
+- Testes de use cases
+- Testes de regras de negocio
+
+## Processo TDD
+
+```
+1. RED    - Escrever teste que falha
+2. GREEN  - Codigo minimo para passar
+3. REFACTOR - Melhorar mantendo testes verdes
+```
+
+## Arquivos a Criar
+
+```
+tests/
+└── unit/
+    └── features/
+        └── {feature}/
+            ├── domain/
+            │   └── {entity}.test.ts
+            └── application/
+                └── {use-case}.test.ts
+```
+
+## Implementacao
+
+```typescript
+import { describe, it, expect } from 'vitest'
+import { {Entity} } from '@/features/{feature}/domain/entities/{entity}'
+
+describe('{Entity}', () => {
+  it('should {comportamento esperado}', () => {
+    // Arrange
+    const input = {}
+
+    // Act
+    const result = {Entity}.create(input)
+
+    // Assert
+    expect(result.isSuccess).toBe(true)
+  })
+
+  it('should fail when {condicao de falha}', () => {
+    // Test error case
+  })
+})
+```
+
+## Criterios de Aceite
+
+- [ ] Cobertura {100%/80-90%} atingida
+- [ ] Todos os testes passam
+- [ ] TDD seguido (teste primeiro)
+
+## Validacao
+
+```bash
+pnpm test:unit --coverage
+pnpm vitest run tests/unit/features/{feature}/ --coverage
+```
+
+---
+
+## Tags de Contexto
+
+```
+PRD: features/{feature}
+ARQUITETURA: dominios/{feature}, decisoes/adr-005-testing-strategy
+```
+```
+
+### Template T-XXX.md (Integration Tests - YouFluent)
+
+```markdown
+# T-XXX: Integration - Testes de {Repository/Service}
+
+| Campo | Valor |
+|-------|-------|
+| **Tamanho** | M |
+| **Prioridade** | Should Have |
+| **Epic** | Testes Integracao |
+| **Depende de** | T-YYY |
+
+---
+
+## Contexto
+
+Testes de integracao para {Repository/Service} usando banco real (Testcontainers) e mocks de APIs externas (MSW).
+
+## Objetivo
+
+Validar integracao com PostgreSQL e APIs externas (YouTube, OpenAI).
+
+## Escopo
+
+- Setup Testcontainers para PostgreSQL
+- Setup MSW para mocking de APIs
+- Testes de repositories Prisma
+- Testes de servicos externos
+
+## Arquivos a Criar
+
+```
+tests/
+├── integration/
+│   └── {feature}/
+│       └── {repository}.test.ts
+├── mocks/
+│   ├── youtube.ts
+│   └── openai.ts
+└── setup/
+    ├── testcontainers.ts
+    └── msw-server.ts
+```
+
+## Implementacao
+
+```typescript
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { PostgreSqlContainer } from '@testcontainers/postgresql'
+import { PrismaClient } from '@prisma/client'
+
+describe('{Repository}', () => {
+  let container: StartedPostgreSqlContainer
+  let prisma: PrismaClient
+
+  beforeAll(async () => {
+    container = await new PostgreSqlContainer().start()
+    prisma = new PrismaClient({
+      datasources: { db: { url: container.getConnectionUri() } }
+    })
+  })
+
+  afterAll(async () => {
+    await prisma.$disconnect()
+    await container.stop()
+  })
+
+  it('should save and retrieve {entity}', async () => {
+    // Arrange
+    const repo = new Prisma{Entity}Repository(prisma)
+
+    // Act
+    await repo.save(entity)
+    const found = await repo.findById(entity.id)
+
+    // Assert
+    expect(found).toEqual(entity)
+  })
+})
+```
+
+## Criterios de Aceite
+
+- [ ] Testcontainers configurado e funcionando
+- [ ] MSW mockando APIs externas
+- [ ] Cobertura 60-80% atingida
+- [ ] Testes passam com DB real
+
+## Validacao
+
+```bash
+docker --version  # Verificar Docker instalado
+pnpm test:integration
+```
+
+---
+
+## Tags de Contexto
+
+```
+PRD: features/{feature}
+ARQUITETURA: dominios/{feature}, decisoes/adr-005-testing-strategy
+```
+```
+
+### Template T-XXX.md (Bug Fix - YouFluent)
 
 ```markdown
 # T-XXX: Fix - {Descricao do Bug}
@@ -400,28 +625,32 @@ Corrigir o bug garantindo que {comportamento esperado}.
 
 - Identificar causa raiz
 - Implementar correcao
-- Adicionar teste de regressao
+- Adicionar teste de regressao (TDD)
 
 ## Arquivos a Modificar
 
 ```
-src/
+src/features/{feature}/
 └── {caminho do arquivo afetado}
 tests/
-└── {teste de regressao}
+└── unit/features/{feature}/
+    └── {teste de regressao}
 ```
 
 ## Criterios de Aceite
 
 - [ ] Bug nao reproduz mais
-- [ ] Teste de regressao adicionado
+- [ ] Teste de regressao adicionado (TDD)
 - [ ] Nenhuma regressao em testes existentes
+- [ ] Lint e type-check passam
 
 ## Validacao
 
 ```bash
-npm run test
-npm run build
+pnpm lint
+pnpm type-check
+pnpm test
+pnpm build
 ```
 
 ---
@@ -430,11 +659,11 @@ npm run build
 
 ```
 PRD: features/{feature-afetada}
-ARQUITETURA: {camada-afetada}
+ARQUITETURA: dominios/{dominio-afetado}
 ```
 ```
 
-### Template T-XXX.md (Nova Feature)
+### Template T-XXX.md (Nova Feature - YouFluent)
 
 ```markdown
 # T-XXX: {Camada} - {Nome da Feature}
@@ -464,23 +693,69 @@ ARQUITETURA: {camada-afetada}
 ## Arquivos a Criar/Modificar
 
 ```
-src/
-└── {estrutura de arquivos}
+src/features/{feature}/
+├── domain/
+│   └── entities/
+│       └── {entity}.ts
+├── application/
+│   └── use-cases/
+│       └── {use-case}.ts
+├── infrastructure/
+│   └── repositories/
+│       └── prisma-{entity}-repository.ts
+└── presentation/
+    └── components/
+        └── {component}.tsx
 ```
 
-## Implementacao
+## Implementacao (TDD)
 
-{Pseudocodigo ou exemplos}
+### 1. Domain (TDD Obrigatorio)
+
+```typescript
+// Primeiro: teste
+// tests/unit/features/{feature}/domain/{entity}.test.ts
+describe('{Entity}', () => {
+  it('should create valid {entity}', () => {
+    const result = {Entity}.create({ ... })
+    expect(result.isSuccess).toBe(true)
+  })
+})
+
+// Depois: implementacao
+// src/features/{feature}/domain/entities/{entity}.ts
+```
+
+### 2. Application (TDD Recomendado)
+
+```typescript
+// Primeiro: teste com mocks
+// tests/unit/features/{feature}/application/{use-case}.test.ts
+describe('{UseCase}', () => {
+  it('should {acao esperada}', async () => {
+    const mockRepo = { ... }
+    const useCase = new {UseCase}(mockRepo)
+    const result = await useCase.execute(input)
+    expect(result).toEqual(expected)
+  })
+})
+```
 
 ## Criterios de Aceite
 
 - [ ] {Criterio 1}
 - [ ] {Criterio 2}
+- [ ] Testes TDD passando (Domain 100%, Application 80%+)
+- [ ] Lint e type-check passam
+- [ ] Build passa
 
 ## Validacao
 
 ```bash
-{comandos de validacao}
+pnpm lint
+pnpm type-check
+pnpm test
+pnpm build
 ```
 
 ---
@@ -489,7 +764,7 @@ src/
 
 ```
 PRD: features/{feature}
-ARQUITETURA: dominios/{dominio}
+ARQUITETURA: dominios/{dominio}, padroes
 ```
 ```
 
@@ -571,105 +846,25 @@ Ou gerar PRP especifico:
 
 ---
 
-## EXEMPLOS COMPLETOS
+## EXEMPLOS COMPLETOS (YouFluent)
 
-### Exemplo 1: Testes E2E (Interativo)
-
-```
-Usuario: /add-tasks
-
-Claude:
-ESTADO ATUAL DO PROJETO
-=======================
-Tarefas existentes: 31 (T-001 a T-031)
-Proximo ID: T-032
-
-Que tipo de tarefas adicionar?
-
-1. Testes (E2E, integracao, unit)
-2. Bug fixes / Correcoes
-3. Nova feature
-4. Refatoracao / Tech debt
-5. Documentacao
-6. Outro
-
-Digite o numero:
-
-Usuario: 1
-
-Claude:
-Que tipo de testes?
-
-1. E2E (Playwright/Cypress)
-2. Integracao
-3. Unit tests
-4. Todos os tipos
-
-Digite o numero:
-
-Usuario: 1
-
-Claude:
-Quais areas cobrir com testes E2E?
-
-1. Todas as features existentes
-2. Selecionar features especificas
-3. Descrever manualmente
-
-Digite o numero:
-
-Usuario: 1
-
-Claude:
-Features identificadas:
-- Autenticacao (F07)
-- Equipes (F05)
-- Investigacoes (F02)
-- Gestao de Tarefas (F01)
-- Lembretes (F03)
-- Notas e Anexos (F04)
-- Colaboracao (F06)
-
-Quantas tarefas criar?
-
-1. Uma tarefa por feature (7 tarefas: T-032 a T-038)
-2. Uma tarefa geral (1 tarefa: T-032)
-3. Agrupar por complexidade
-
-Digite o numero:
-
-Usuario: 1
-
-Claude:
-[Cria 7 arquivos T-032.md a T-038.md]
-[Atualiza _index.md]
-
-TAREFAS ADICIONADAS COM SUCESSO
-===============================
-...
-```
-
-### Exemplo 2: Bug Fixes (Descricao Livre)
+### Exemplo 1: Testes E2E
 
 ```
-Usuario: /add-tasks "corrigir: login nao redireciona, filtro nao persiste, drag quebra em mobile"
+Usuario: /add-tasks "criar testes E2E com Playwright para player, transcript e lesson"
 
 Claude:
 ANALISE DA DESCRICAO
 ====================
-Tipo identificado: Bug Fixes
-Bugs encontrados: 3
+Tipo identificado: Testes E2E
+Features: player, transcript, lesson
 
 TAREFAS PROPOSTAS:
-1. T-032: Fix - Login nao redireciona apos autenticacao
-2. T-033: Fix - Filtro de tarefas nao persiste
-3. T-034: Fix - Drag and drop quebra em mobile
+1. T-032: E2E - Testes do Player YouTube
+2. T-033: E2E - Testes de Transcricoes
+3. T-034: E2E - Testes de Licoes IA
 
-Confirma a criacao destas tarefas?
-
-1. Sim, criar todas
-2. Quero ajustar
-3. Cancelar
+Confirma?
 
 Usuario: 1
 
@@ -678,31 +873,39 @@ Claude:
 ...
 ```
 
-### Exemplo 3: Nova Feature (Com Epic)
+### Exemplo 2: Testes TDD por Camada
 
 ```
-Usuario: /add-tasks --epic="Notificacoes Push" "implementar notificacoes push com Firebase"
+Usuario: /add-tasks "testes unitarios TDD para domain layer"
 
 Claude:
 ANALISE DA DESCRICAO
 ====================
-Epic: Notificacoes Push
-Tipo: Nova Feature
+Tipo identificado: Unit Tests (TDD)
+Camada: Domain
+Features: player, transcript, lesson
 
-Quantas tarefas criar?
+TAREFAS PROPOSTAS:
+1. T-032: Unit TDD - Domain Transcript (VideoId, Chunk, Transcript)
+2. T-033: Unit TDD - Domain Player (VideoChunk, PlayerState)
+3. T-034: Unit TDD - Domain Lesson (Lesson, VocabularyItem, Exercise)
 
-1. Uma tarefa (implementacao completa)
-2. Por camada DDD (4 tarefas: Domain, Application, Infrastructure, Presentation)
-3. Personalizado
+Confirma?
+...
+```
 
-Usuario: 2
+### Exemplo 3: Integration Tests
+
+```
+Usuario: /add-tasks "testes de integracao com Testcontainers e MSW"
 
 Claude:
 TAREFAS PROPOSTAS:
-1. T-032: Domain - Notification entity + eventos
-2. T-033: Application - Push Notification Use Cases
-3. T-034: Infrastructure - Firebase Integration
-4. T-035: Presentation - UI de permissao + notificacoes
+1. T-032: Integration - Setup Testcontainers e MSW
+2. T-033: Integration - TranscriptRepository com PostgreSQL
+3. T-034: Integration - LessonRepository com PostgreSQL
+4. T-035: Integration - YouTubeTranscriptService com MSW
+5. T-036: Integration - OpenAILessonGenerator com MSW
 
 Confirma?
 ...
@@ -720,7 +923,8 @@ Antes de finalizar, verificar:
 - [ ] Tags de Contexto em cada tarefa
 - [ ] _index.md atualizado (nova secao, ordem, dependencias, totais)
 - [ ] Criterios de aceite verificaveis
-- [ ] Comandos de validacao executaveis
+- [ ] Comandos de validacao executaveis (pnpm)
+- [ ] Estrategia TDD refletida nos templates
 
 ---
 
@@ -734,7 +938,7 @@ Apos adicionar tarefas:
 
 # Ou manualmente
 /generate-prp T-032
-/execute-prp PRPs/032-e2e-auth/PRP.md
+/execute-prp PRPs/032-e2e-player/PRP.md
 ```
 
 O `/generate-prp` modo AUTO detectara automaticamente as novas tarefas via Git + _index.md.

@@ -7,6 +7,39 @@ Executa automaticamente a proxima tarefa do inicio ao fim.
 
 ---
 
+## CONTEXTO DO PROJETO: YouFluent
+
+### Stack Tecnologica
+| Tecnologia | Versao |
+|------------|--------|
+| Next.js | 16.1.1+ |
+| React | 19.2.x |
+| TypeScript | 5.9.x |
+| Node.js | 20.19+ |
+| Prisma | 7.x (com @prisma/adapter-pg) |
+| PostgreSQL | 16 (Docker Compose) |
+| Zustand | 5.x |
+| Zod | latest |
+| Tailwind CSS | v4 |
+| shadcn/ui | 2.5.x |
+| Vitest | 3.0.5+ |
+| Playwright | 1.55.1+ |
+
+### Dominios do Projeto
+- **lesson** - Licoes geradas por IA
+- **player** - Player YouTube
+- **transcript** - Transcricoes e cache
+
+### Estrategia de Testes (TDD)
+| Camada | TDD | Cobertura |
+|--------|-----|-----------|
+| Domain | Obrigatorio | 100% |
+| Application | Recomendado | 80-90% |
+| Infrastructure | Parcial | 60-80% |
+| Presentation | Nao | E2E apenas |
+
+---
+
 ## INSTRUCAO OBRIGATORIA
 
 **VOCE DEVE usar a ferramenta `Task` em DUAS etapas sequenciais.**
@@ -58,7 +91,7 @@ Conversa Principal
                  │
 ┌─────────────────────────────────────┐
 │ Task 2: /execute-prp {PRP.md}       │
-│ (implementa + valida + commit)      │
+│ (implementa TDD + valida + commit)  │
 │ → Retorna: commit hash, arquivos    │
 └────────────────┬────────────────────┘
                  │
@@ -75,6 +108,12 @@ Conversa Principal
 ```
 Voce e um agente autonomo. Sua UNICA tarefa e gerar o PRP.
 
+## Contexto do Projeto: YouFluent
+
+Stack: Next.js 16.1.1+, React 19.2.x, Prisma 7.x, PostgreSQL 16, Zustand 5.x
+Dominios: lesson, player, transcript
+Padroes: DDD, Clean Architecture, TDD, Server-first
+
 ## Tarefa
 
 Execute /generate-prp sem argumentos (modo AUTO).
@@ -83,6 +122,12 @@ O comando ira:
 1. Detectar proxima tarefa via Git + TASKS/_index.md
 2. Carregar contexto via Tags de Contexto
 3. Gerar PRP completo em PRPs/{numero}-{slug}/PRP.md
+
+Lembre-se:
+- NAO pesquisar versoes de bibliotecas (usar context/ARQUITETURA/stack.md)
+- Seguir estrategia TDD por camada (Domain 100%, Application 80%)
+- Server Components por padrao, "use client" apenas quando necessario
+- Zustand para estado, Zod para validacao
 
 ## Retorno OBRIGATORIO
 
@@ -102,6 +147,12 @@ ERRO: (apenas se falhou)
 ```
 Voce e um agente autonomo. Sua UNICA tarefa e executar o PRP.
 
+## Contexto do Projeto: YouFluent
+
+Stack: Next.js 16.1.1+, React 19.2.x, Prisma 7.x, PostgreSQL 16, Zustand 5.x
+Dominios: lesson, player, transcript
+Padroes: DDD, Clean Architecture, TDD, Server-first
+
 ## Tarefa
 
 Execute /execute-prp {PRP_PATH}
@@ -109,10 +160,21 @@ Execute /execute-prp {PRP_PATH}
 (Substitua {PRP_PATH} pelo caminho retornado pelo Agente 1)
 
 O comando ira:
-1. Implementar seguindo TDD
-2. Validar (lint, tests, build)
+1. Implementar seguindo TDD:
+   - Domain: TDD Obrigatorio (100% cobertura)
+   - Application: TDD Recomendado (80% cobertura)
+   - Infrastructure: Parcial (60% cobertura)
+   - Presentation: Server-first, sem TDD
+2. Validar (pnpm lint, pnpm type-check, pnpm test, pnpm build)
 3. Atualizar PRP com pos-implementacao
 4. Fazer commit com formato padrao
+
+Lembre-se:
+- NAO pular validacao - todos os gates devem passar
+- TDD: escrever teste ANTES do codigo (Domain e Application)
+- Server Components por padrao
+- Zustand para estado local
+- Zod para validacao de inputs
 
 ## Retorno OBRIGATORIO
 
@@ -122,6 +184,7 @@ TASK_ID: T-XXX
 TASK_NAME: Nome da tarefa
 ARQUIVOS_CRIADOS: (lista)
 ARQUIVOS_MODIFICADOS: (lista)
+TESTES: {N} passando (Domain: X%, Application: Y%)
 COMMIT_HASH: abc1234
 STATUS: SUCESSO ou FALHA
 ERRO: (apenas se falhou)
@@ -140,6 +203,51 @@ ERRO: (apenas se falhou)
 - Exibir erro com logs
 - Sugerir: "Revise o PRP em {caminho} e execute /execute-prp manualmente"
 
+### Erros comuns (YouFluent):
+- **Prisma 7**: Verificar se @prisma/adapter-pg esta configurado
+- **Tailwind v4**: Verificar se CSS-first config esta correto
+- **TDD falhou**: Verificar cobertura minima por camada
+- **Build falhou**: Verificar Server Components vs Client Components
+
+---
+
+## Output Final ao Usuario
+
+Apos ambas as Tasks concluirem, exibir:
+
+```
+TAREFA CONCLUIDA
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+Tarefa: T-XXX - {nome}
+PRP: PRPs/{numero}-{slug}/PRP.md
+
+Arquivos criados:
+- {lista}
+
+Arquivos modificados:
+- {lista}
+
+Testes:
+- Total: {N} passando
+- Domain: {X}% cobertura
+- Application: {Y}% cobertura
+
+Validacao:
+- [x] Lint: passou
+- [x] Type-check: passou
+- [x] Unit tests: passou
+- [x] Build: passou
+
+Commit: {hash}
+Mensagem: feat(T-XXX): {descricao}
+
+Proxima tarefa: T-XXX+1 - {nome}
+
+Para continuar:
+/next
+```
+
 ---
 
 ## Notas
@@ -148,3 +256,6 @@ ERRO: (apenas se falhou)
 - **Zero interacao:** Agentes executam sem perguntas
 - **Git e a fonte de verdade:** Commit registra progresso
 - **Capturar PRP_PATH:** Essencial para passar da Task 1 para Task 2
+- **TDD por camada:** Domain 100%, Application 80%, Infrastructure 60%
+- **Server-first:** Server Components por padrao
+- **Zustand para estado:** Nao usar React Query, SWR ou tRPC

@@ -1,7 +1,7 @@
-# Context Manifest
+# Context Manifest - YouFluent
 
-**Versao:** 1.0
-**Atualizado:** {auto}
+**Versao:** 2.0
+**Atualizado:** 2026-01-02
 
 > **Indice central de todo o contexto do projeto.**
 > Use este arquivo para navegar rapidamente e carregar apenas o contexto necessario.
@@ -17,26 +17,29 @@ context/
 │   ├── _index.md            # Resumo do PRD (~1KB)
 │   ├── visao.md             # Visao e proposta de valor
 │   ├── personas.md          # Personas e jornadas
-│   ├── features/            # Uma feature por arquivo
-│   │   ├── {feature-slug}.md
-│   │   └── ...
+│   ├── features/
+│   │   ├── player.md        # Feature: Player YouTube
+│   │   ├── transcript.md    # Feature: Transcricoes
+│   │   └── lesson.md        # Feature: Licoes IA
 │   └── requisitos-nao-funcionais.md
 ├── ARQUITETURA/
 │   ├── _index.md            # Resumo da arquitetura (~1KB)
 │   ├── visao-geral.md       # Diagramas C4 e overview
 │   ├── stack.md             # Stack tecnologica completa
-│   ├── dominios/            # Um dominio por arquivo
-│   │   ├── {dominio-slug}.md
-│   │   └── ...
-│   ├── decisoes/            # ADRs
-│   │   ├── adr-001-{slug}.md
-│   │   └── ...
-│   └── padroes.md           # DDD, Clean Arch, TDD
+│   ├── padroes.md           # DDD, Clean Arch, TDD, Server-first
+│   ├── dominios/
+│   │   ├── lesson.md        # Dominio: Licoes
+│   │   ├── player.md        # Dominio: Player
+│   │   └── transcript.md    # Dominio: Transcricoes
+│   └── decisoes/
+│       ├── adr-001-nextjs-16.md      # Next.js 16 como framework
+│       ├── adr-002-prisma-7.md       # Prisma 7 com Driver Adapters
+│       ├── adr-003-zustand.md        # Zustand para estado
+│       ├── adr-004-cache-postgres.md # Cache no PostgreSQL
+│       └── adr-005-testing-strategy.md # Estrategia de testes TDD
 └── TASKS/
     ├── _index.md            # Indice (ordem + dependencias)
-    ├── T-001.md             # Tarefa 1
-    ├── T-002.md             # Tarefa 2
-    └── ...                  # Uma tarefa por arquivo
+    └── T-XXX.md             # Uma tarefa por arquivo
 ```
 
 ---
@@ -47,10 +50,12 @@ context/
 
 | Arquivo | Descricao | Tamanho |
 |---------|-----------|---------|
-| `PRD/_index.md` | **Resumo executivo** - visao, proposta, MVP | ~1KB |
+| `PRD/_index.md` | **Resumo executivo** - visao, MVP, metricas | ~1KB |
 | `PRD/visao.md` | Visao de longo prazo, proposta de valor | ~2KB |
-| `PRD/personas.md` | Personas e jornadas do usuario | ~3KB |
-| `PRD/features/*.md` | Features detalhadas (MoSCoW) | ~2KB cada |
+| `PRD/personas.md` | Lucas (dev), Marina (estudante) | ~2KB |
+| `PRD/features/player.md` | Feature: Player YouTube | ~2KB |
+| `PRD/features/transcript.md` | Feature: Transcricoes e cache | ~2KB |
+| `PRD/features/lesson.md` | Feature: Licoes com IA | ~2KB |
 | `PRD/requisitos-nao-funcionais.md` | Performance, seguranca, escala | ~2KB |
 
 **Para carregar contexto de PRD:**
@@ -62,35 +67,45 @@ context/
 
 | Arquivo | Descricao | Tamanho |
 |---------|-----------|---------|
-| `ARQUITETURA/_index.md` | **Resumo** - stack, padroes, estrutura | ~1KB |
-| `ARQUITETURA/visao-geral.md` | Diagramas C4, contexto, containers | ~3KB |
-| `ARQUITETURA/stack.md` | Linguagens, frameworks, servicos | ~2KB |
-| `ARQUITETURA/dominios/*.md` | Modelo de dominio por bounded context | ~2KB cada |
-| `ARQUITETURA/decisoes/*.md` | ADRs (Architecture Decision Records) | ~1KB cada |
-| `ARQUITETURA/padroes.md` | DDD, Clean Architecture, TDD | ~2KB |
+| `ARQUITETURA/_index.md` | **Resumo** - stack, padroes, ADRs | ~1KB |
+| `ARQUITETURA/visao-geral.md` | Diagramas C4, fluxos | ~3KB |
+| `ARQUITETURA/stack.md` | Next.js 16, Prisma 7, Zustand, etc | ~2KB |
+| `ARQUITETURA/padroes.md` | DDD, Clean Arch, TDD, Server-first | ~3KB |
+| `ARQUITETURA/dominios/lesson.md` | Modelo de dominio: Licoes | ~2KB |
+| `ARQUITETURA/dominios/player.md` | Modelo de dominio: Player | ~2KB |
+| `ARQUITETURA/dominios/transcript.md` | Modelo de dominio: Transcricoes | ~2KB |
+| `ARQUITETURA/decisoes/adr-001-nextjs-16.md` | ADR: Next.js 16 | ~1KB |
+| `ARQUITETURA/decisoes/adr-002-prisma-7.md` | ADR: Prisma 7 | ~1KB |
+| `ARQUITETURA/decisoes/adr-003-zustand.md` | ADR: Zustand | ~1KB |
+| `ARQUITETURA/decisoes/adr-004-cache-postgres.md` | ADR: Cache PostgreSQL | ~1KB |
+| `ARQUITETURA/decisoes/adr-005-testing-strategy.md` | ADR: Testes TDD | ~4KB |
 
 **Para carregar contexto de Arquitetura:**
 - Tarefa de dominio X → `ARQUITETURA/_index.md` + `ARQUITETURA/dominios/X.md`
-- Tarefa de integracao → `ARQUITETURA/_index.md` + `ARQUITETURA/stack.md` + ADRs relevantes
+- Tarefa de integracao → `ARQUITETURA/_index.md` + `ARQUITETURA/stack.md`
 - Tarefa de setup → `ARQUITETURA/_index.md` + `ARQUITETURA/padroes.md`
 
 ### TASKS
 
 | Arquivo | Descricao | Tamanho |
 |---------|-----------|---------|
-| `TASKS/_index.md` | **Indice** - ordem, dependencias, lista de IDs | ~0.5KB |
+| `TASKS/_index.md` | **Indice** - ordem, dependencias | ~0.5KB |
 | `TASKS/T-XXX.md` | Uma tarefa por arquivo | ~1KB cada |
 
 **Progresso:** Acompanhado via Git (commits), nao via arquivos.
-```bash
-git log -1 --grep="^feat(T-\|^fix(T-" --format="%s"  # Ultima concluida
-git log --oneline --grep="T-"                         # Todas concluidas
-```
 
-**Para carregar contexto de Tasks:**
-- Iniciar tarefa → `TASKS/_index.md` (ordem) + `TASKS/T-XXX.md` (tarefa especifica)
-- Visao geral → `TASKS/_index.md` apenas
-- Tarefa com dependencia → `T-XXX.md` + `T-YYY.md` (dependencias)
+---
+
+## Stack Principal (Resumo)
+
+| Camada | Tecnologia | Versao |
+|--------|------------|--------|
+| Framework | Next.js | 16.1.1+ |
+| UI | React + Tailwind + shadcn | 19.2.x + v4 |
+| Estado | Zustand | 5.x |
+| ORM | Prisma | 7.x |
+| Database | PostgreSQL | 16 |
+| IA | OpenAI SDK | 6.1.x |
 
 ---
 
@@ -102,7 +117,7 @@ Carregar:
 ├── ARQUITETURA/_index.md
 ├── ARQUITETURA/stack.md
 ├── ARQUITETURA/padroes.md
-└── TASKS/T-XXX.md (tarefa especifica via Git)
+└── TASKS/T-XXX.md
 
 ~6KB total
 ```
@@ -114,10 +129,9 @@ Carregar:
 ├── PRD/features/{feature}.md
 ├── ARQUITETURA/_index.md
 ├── ARQUITETURA/dominios/{dominio}.md
-├── ARQUITETURA/decisoes/{adrs-relevantes}.md
-└── TASKS/T-XXX.md (tarefa especifica via Git)
+└── TASKS/T-XXX.md
 
-~10KB total
+~8KB total
 ```
 
 ### Bug Fix
@@ -125,20 +139,9 @@ Carregar:
 Carregar:
 ├── ARQUITETURA/_index.md
 ├── ARQUITETURA/dominios/{dominio-afetado}.md
-└── TASKS/T-XXX.md (tarefa especifica via Git)
+└── TASKS/T-XXX.md
 
 ~4KB total
-```
-
-### Refatoracao
-```
-Carregar:
-├── ARQUITETURA/_index.md
-├── ARQUITETURA/padroes.md
-├── ARQUITETURA/dominios/{dominio}.md
-└── TASKS/T-XXX.md (tarefa especifica via Git)
-
-~6KB total
 ```
 
 ---
@@ -148,9 +151,12 @@ Carregar:
 Cada arquivo `TASKS/T-XXX.md` especifica tags de contexto:
 
 ```markdown
-**Tags de Contexto:**
-PRD: features/auth
-ARQUITETURA: dominios/user, decisoes/adr-001-db
+## Tags de Contexto
+
+```
+PRD: features/lesson
+ARQUITETURA: dominios/lesson, decisoes/adr-001-nextjs-16
+```
 ```
 
 O loader inteligente (`/carregar-contexto`) usa essas tags para carregar apenas os arquivos necessarios.
@@ -162,11 +168,11 @@ O loader inteligente (`/carregar-contexto`) usa essas tags para carregar apenas 
 | Cenario | Antes (monolitico) | Depois (modular) | Economia |
 |---------|-------------------|------------------|----------|
 | Setup inicial | ~50KB | ~6KB | **88%** |
-| Feature media | ~50KB | ~10KB | **80%** |
+| Feature media | ~50KB | ~8KB | **84%** |
 | Bug fix | ~50KB | ~4KB | **92%** |
 | Refatoracao | ~50KB | ~6KB | **88%** |
 
-**Media:** ~85% de economia de tokens por tarefa
+**Media:** ~88% de economia de tokens por tarefa
 
 ---
 
@@ -185,10 +191,11 @@ Execute `/sync-context` para:
 | Documento | Descricao |
 |-----------|-----------|
 | `CLAUDE.md` | Regras globais do projeto |
+| `FUNDACAO_V2.md` | Decisoes tecnicas de fundacao |
 | `docs/PILARES.md` | Pilares fundamentais |
 | `.claude/commands/` | Comandos do framework |
 
 ---
 
 *Manifest gerado pelo Context Engineering Framework*
-*Sistema de Contexto Modular v1.0*
+*Sistema de Contexto Modular v2.0*

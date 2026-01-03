@@ -6,23 +6,28 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         SISTEMA: {Nome}                          │
+│                         SISTEMA: YouFluent                       │
 │                                                                  │
 │  ┌──────────┐       ┌─────────────────┐       ┌──────────┐     │
-│  │ Usuario  │──────►│   {Nome do      │◄─────►│ Sistema  │     │
-│  │ {tipo}   │       │   Sistema}      │       │ Externo  │     │
+│  │ Usuario  │──────►│   YouFluent     │◄─────►│ YouTube  │     │
+│  │ (Browser)│       │   Web App       │       │ API      │     │
 │  └──────────┘       └─────────────────┘       └──────────┘     │
 │                              │                                   │
-│                              ▼                                   │
+│                              │                 ┌──────────┐     │
+│                              │◄───────────────►│ OpenAI   │     │
+│                              │                 │ API      │     │
+│                              ▼                 └──────────┘     │
 │                     ┌──────────────┐                            │
-│                     │   Database   │                            │
+│                     │ PostgreSQL   │                            │
+│                     │ (Docker)     │                            │
 │                     └──────────────┘                            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 **Atores:**
-- **{Usuario tipo 1}**: {descricao e como interage}
-- **{Sistema externo}**: {descricao e proposito da integracao}
+- **Usuario (Browser)**: Estudante de ingles que acessa via navegador web
+- **YouTube API**: Fonte de transcricoes de videos (via youtube-transcript)
+- **OpenAI API**: Geracao de licoes, vocabulario e exercicios
 
 ---
 
@@ -30,21 +35,33 @@
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│                          {Nome do Sistema}                          │
+│                            YouFluent                                │
 │                                                                     │
-│   ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐   │
-│   │   Frontend  │    │   Backend   │    │     Workers         │   │
-│   │             │───►│   API       │───►│   (Background)      │   │
-│   │ {framework} │    │ {framework} │    │   {se aplicavel}    │   │
-│   │ {hosting}   │    │ {hosting}   │    │                     │   │
-│   └─────────────┘    └──────┬──────┘    └─────────────────────┘   │
-│                             │                                      │
-│              ┌──────────────┼──────────────┐                      │
-│              ▼              ▼              ▼                      │
-│      ┌───────────┐   ┌───────────┐   ┌───────────┐              │
-│      │ Database  │   │   Cache   │   │  Storage  │              │
-│      │ {tipo}    │   │ {tipo}    │   │  {tipo}   │              │
-│      └───────────┘   └───────────┘   └───────────┘              │
+│   ┌─────────────────────────────────────────────────────────────┐  │
+│   │                    Next.js 16 Application                    │  │
+│   │  ┌─────────────┐    ┌─────────────┐    ┌─────────────────┐  │  │
+│   │  │   React     │    │   API       │    │   Server        │  │  │
+│   │  │   Client    │───►│   Routes    │    │   Actions       │  │  │
+│   │  │  Components │    │             │    │                 │  │  │
+│   │  │ (Browser)   │    │ (Node.js)   │    │ (Node.js)       │  │  │
+│   │  └─────────────┘    └──────┬──────┘    └────────┬────────┘  │  │
+│   │                            │                     │           │  │
+│   │              ┌─────────────┴─────────────────────┘           │  │
+│   │              ▼                                               │  │
+│   │      ┌───────────────────────────────────────────┐          │  │
+│   │      │              Features Layer                │          │  │
+│   │      │  ┌─────────┐ ┌─────────┐ ┌─────────────┐  │          │  │
+│   │      │  │ Lesson  │ │ Player  │ │ Transcript  │  │          │  │
+│   │      │  └─────────┘ └─────────┘ └─────────────┘  │          │  │
+│   │      └───────────────────────────────────────────┘          │  │
+│   └─────────────────────────────────────────────────────────────┘  │
+│                              │                                      │
+│              ┌───────────────┴───────────────┐                     │
+│              ▼                               ▼                     │
+│      ┌───────────┐                   ┌───────────┐                │
+│      │PostgreSQL │                   │  OpenAI   │                │
+│      │ (Docker)  │                   │   API     │                │
+│      └───────────┘                   └───────────┘                │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -52,34 +69,90 @@
 
 | Container | Tecnologia | Responsabilidade | Comunicacao |
 |-----------|------------|------------------|-------------|
-| Frontend | {stack} | {funcao} | HTTPS → Backend |
-| Backend API | {stack} | {funcao} | REST/GraphQL |
-| Database | {tipo} | {funcao} | TCP |
-| Cache | {tipo} | {funcao} | TCP |
+| React Client | React 19 + Tailwind | UI interativa, player | HTTP/WebSocket |
+| API Routes | Next.js 16 | Endpoints REST | JSON |
+| Server Actions | Next.js 16 | Mutacoes tipadas | RPC-like |
+| PostgreSQL | Docker Compose | Persistencia | TCP/5432 |
+| OpenAI | API externa | Geracao de conteudo | HTTPS |
+| YouTube | API externa | Transcricoes | HTTPS |
 
 ---
 
 ## Fluxo de Dados Principal
 
+### Fluxo: Usuario processa novo video
+
 ```
-Usuario
-   │
-   ▼
-[Frontend] ──HTTP──► [API Gateway]
-                          │
-                          ▼
-                    [Use Case Layer]
-                          │
-              ┌───────────┴───────────┐
-              ▼                       ▼
-        [Domain]               [Infrastructure]
-              │                       │
-              └───────────┬───────────┘
-                          ▼
-                    [Database]
+┌────────┐     ┌──────────┐     ┌─────────────┐     ┌──────────┐
+│Usuario │     │ Frontend │     │   Backend   │     │ External │
+└───┬────┘     └────┬─────┘     └──────┬──────┘     └────┬─────┘
+    │               │                   │                 │
+    │ Cola URL      │                   │                 │
+    │──────────────►│                   │                 │
+    │               │ POST /transcript  │                 │
+    │               │──────────────────►│                 │
+    │               │                   │ Check cache     │
+    │               │                   │────────────────►│ DB
+    │               │                   │◄────────────────│
+    │               │                   │                 │
+    │               │                   │ [Se nao cached] │
+    │               │                   │────────────────►│ YouTube
+    │               │                   │◄────────────────│
+    │               │                   │                 │
+    │               │                   │ Salva no cache  │
+    │               │                   │────────────────►│ DB
+    │               │                   │                 │
+    │               │◄──────────────────│                 │
+    │◄──────────────│                   │                 │
+    │               │                   │                 │
+    │ Clica "Gerar  │                   │                 │
+    │    Licao"     │                   │                 │
+    │──────────────►│                   │                 │
+    │               │ POST /lesson      │                 │
+    │               │──────────────────►│                 │
+    │               │                   │────────────────►│ OpenAI
+    │               │                   │◄────────────────│
+    │               │◄──────────────────│                 │
+    │◄──────────────│                   │                 │
 ```
 
 ---
 
-*Extraido de: Arquitetura completa*
-*Atualizado em: {data}*
+## Estrutura de Features (Clean Architecture)
+
+```
+features/
+├── lesson/
+│   ├── domain/
+│   │   ├── entities/
+│   │   │   ├── lesson.ts
+│   │   │   ├── exercise.ts
+│   │   │   └── vocabulary.ts
+│   │   └── interfaces/
+│   │       └── lesson-repository.ts
+│   ├── application/
+│   │   └── use-cases/
+│   │       ├── generate-lesson.ts
+│   │       └── get-lesson.ts
+│   ├── infrastructure/
+│   │   ├── repositories/
+│   │   │   └── prisma-lesson-repository.ts
+│   │   └── services/
+│   │       └── openai-lesson-generator.ts
+│   └── presentation/
+│       ├── components/
+│       │   ├── lesson-card.tsx
+│       │   └── exercise-panel.tsx
+│       └── hooks/
+│           └── use-lesson.ts
+│
+├── player/
+│   └── ... (mesma estrutura)
+│
+└── transcript/
+    └── ... (mesma estrutura)
+```
+
+---
+
+*Atualizado em: 2026-01-02*

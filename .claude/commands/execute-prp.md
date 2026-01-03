@@ -7,9 +7,56 @@ Implementa uma feature usando o PRP e faz commit ao final.
 > **Ciclo completo:** Implementa → Valida → Atualiza PRP → Commit
 > **100% Autonomo:** Sem perguntas, sem confirmacoes.
 
-> ⚠️ **VERSÕES:** NÃO pesquisar versões de bibliotecas via WebSearch.
-> Usar versões já definidas em `context/ARQUITETURA/stack.md` e no PRP.
-> A pesquisa de versões é responsabilidade EXCLUSIVA do `/gerar-arquitetura`.
+> **VERSOES:** NAO pesquisar versoes de bibliotecas via WebSearch.
+> Usar versoes ja definidas em `context/ARQUITETURA/stack.md` e no PRP.
+> A pesquisa de versoes e responsabilidade EXCLUSIVA do `/gerar-arquitetura`.
+
+---
+
+## CONTEXTO DO PROJETO: YouFluent
+
+### Stack Tecnologica
+| Tecnologia | Versao |
+|------------|--------|
+| Next.js | 16.1.1+ |
+| React | 19.2.x |
+| TypeScript | 5.9.x |
+| Node.js | 20.19+ |
+| Prisma | 7.x (com @prisma/adapter-pg) |
+| PostgreSQL | 16 (Docker Compose) |
+| Zustand | 5.x |
+| Zod | latest |
+| Tailwind CSS | v4 |
+| shadcn/ui | 2.5.x |
+| Vitest | 3.0.5+ |
+| Playwright | 1.55.1+ |
+| Testcontainers | latest |
+| MSW | 2.x |
+
+### Dominios do Projeto
+- **lesson** - Licoes geradas por IA
+- **player** - Player YouTube
+- **transcript** - Transcricoes e cache
+
+### Estrutura de Pastas
+```
+src/
+├── app/                  # Next.js App Router (rotas apenas)
+├── features/             # Dominios organizados por feature
+│   ├── lesson/           # domain, application, infrastructure, presentation
+│   ├── player/
+│   └── transcript/
+├── shared/               # Codigo compartilhado
+└── prisma/               # Schema e migrations
+```
+
+### Estrategia de Testes (TDD)
+| Camada | TDD | Cobertura | Ferramentas |
+|--------|-----|-----------|-------------|
+| Domain | Obrigatorio | 100% | Vitest |
+| Application | Recomendado | 80-90% | Vitest + mocks |
+| Infrastructure | Parcial | 60-80% | Vitest + Testcontainers + MSW |
+| Presentation | Nao | E2E apenas | Playwright |
 
 ---
 
@@ -47,18 +94,41 @@ ULTRATHINK:
 
 Para cada componente do blueprint:
 
+**Domain Layer (TDD Obrigatorio - 100%)**
 ```
-1. RED    - Escrever teste que falha
-2. GREEN  - Codigo minimo para passar
+1. RED    - Escrever teste em tests/unit/features/{feature}/domain/
+2. GREEN  - Implementar em src/features/{feature}/domain/
 3. REFACTOR - Melhorar mantendo testes verdes
+```
+
+**Application Layer (TDD Recomendado - 80-90%)**
+```
+1. RED    - Escrever teste com mocks em tests/unit/features/{feature}/application/
+2. GREEN  - Implementar em src/features/{feature}/application/
+3. REFACTOR
+```
+
+**Infrastructure Layer (Parcial - 60-80%)**
+```
+1. Implementar em src/features/{feature}/infrastructure/
+2. Testar com Testcontainers (PostgreSQL real)
+3. Testar com MSW (APIs externas mockadas)
+```
+
+**Presentation Layer (Sem TDD)**
+```
+1. Implementar Server Components em src/features/{feature}/presentation/
+2. Usar "use client" apenas quando necessario
+3. Zustand para estado local
 ```
 
 **Padroes obrigatorios:**
 - DDD (Domain-Driven Design)
 - Clean Architecture
-- TDD (Test-Driven Development)
+- TDD (Test-Driven Development) por camada
 - Result pattern para erros
 - Logs estruturados
+- Zod para validacao de inputs
 
 ### Fase 4: Validar
 
@@ -66,17 +136,25 @@ Executar validation gates do PRP:
 
 ```bash
 # Nivel 1: Syntax & Style
-npm run lint && npm run format:check
+pnpm lint && pnpm format:check
 
-# Nivel 2: Unit Tests
-npm run test:unit
+# Nivel 2: Type Check
+pnpm type-check
 
-# Nivel 3: Integration Tests
-npm run test:integration
+# Nivel 3: Unit Tests (TDD)
+pnpm test:unit --coverage
 
-# Nivel 4: Type Check + Build
-npm run type-check && npm run build
+# Nivel 4: Integration Tests
+pnpm test:integration
+
+# Nivel 5: Build
+pnpm build
 ```
+
+**Cobertura minima por camada:**
+- Domain: 100%
+- Application: 80%
+- Infrastructure: 60%
 
 **Se falhar:**
 1. Ler erro completo
@@ -102,12 +180,15 @@ Adicionar secao no final do PRP.md:
 
 ### Testes
 - {N} testes criados
-- Cobertura: {X}%
+- Cobertura Domain: {X}%
+- Cobertura Application: {Y}%
+- Cobertura Infrastructure: {Z}%
 
 ### Validation Gates
 - [x] Lint: passou
 - [x] Type-check: passou
-- [x] Unit tests: passou
+- [x] Unit tests: passou ({N} testes)
+- [x] Integration tests: passou ({N} testes)
 - [x] Build: passou
 
 ### Erros Encontrados
@@ -151,7 +232,8 @@ Proxima task: [T-XXX+1] - {Nome da proxima}
 
 ## Validation
 - Lint: passou
-- Tests: {N} passando
+- Type-check: passou
+- Tests: {N} passando (Domain: 100%, App: 80%+)
 - Build: passou
 
 🤖 Generated with Claude Code
@@ -174,7 +256,10 @@ TAREFA T-XXX CONCLUIDA
 PRP: {caminho do PRP}
 Arquivos: {N} criados/modificados
 Testes: {N} passando
-Cobertura: {X}%
+Cobertura:
+  - Domain: {X}%
+  - Application: {Y}%
+  - Infrastructure: {Z}%
 
 Commit: {hash} - feat(T-XXX): {descricao}
 
@@ -203,11 +288,34 @@ Proxima tarefa: T-XXX+1 - {nome}
 
 ---
 
+## Comandos de Validacao YouFluent
+
+```bash
+# Scripts pnpm (definir em package.json)
+pnpm lint              # ESLint
+pnpm format:check      # Prettier check
+pnpm type-check        # tsc --noEmit
+pnpm test              # Vitest (todos)
+pnpm test:unit         # Vitest unit only
+pnpm test:integration  # Vitest integration (Testcontainers)
+pnpm test:e2e          # Playwright
+pnpm test:coverage     # Vitest com cobertura
+pnpm build             # Next.js build
+
+# Comandos diretos
+pnpm vitest run tests/unit/ --coverage
+pnpm vitest run tests/integration/
+pnpm exec playwright test
+```
+
+---
+
 ## Checklist Final
 
 Antes de considerar completo:
 
 - [ ] Todos os criterios de aceite do PRP atendidos
+- [ ] TDD seguido (Domain 100%, Application 80%+)
 - [ ] Todos os validation gates passando
 - [ ] PRP atualizado com pos-implementacao
 - [ ] Commit feito com formato correto
@@ -221,3 +329,6 @@ Antes de considerar completo:
 - **Nunca pular validacao** - se falhar, corrigir antes de prosseguir
 - **Commit e obrigatorio** - faz parte do ciclo completo
 - **Git e a fonte de verdade** - o commit registra o progresso
+- **Server-first** - Server Components por padrao, "use client" apenas quando necessario
+- **Zustand para estado** - Nao usar React Query, SWR ou tRPC
+- **Zod para validacao** - Em API Routes e forms

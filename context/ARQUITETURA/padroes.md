@@ -6,16 +6,13 @@
 
 ## DDD - Domain-Driven Design
 
-### Estrutura de Dominio
+### Estrutura de Dominio (por Feature)
 
 ```
-domain/
+features/{feature}/domain/
 ├── entities/          # Entidades com identidade
-├── value_objects/     # Objetos imutaveis sem identidade
-├── aggregates/        # Agregados (raiz + entidades)
-├── events/            # Eventos de dominio
-├── services/          # Servicos de dominio (logica que nao pertence a entidade)
-├── repositories/      # Interfaces (ports) - NAO implementacoes
+├── value-objects/     # Objetos imutaveis sem identidade
+├── interfaces/        # Interfaces (ports) para repositorios
 └── errors/            # Erros tipados do dominio
 ```
 
@@ -23,15 +20,18 @@ domain/
 
 1. **Entidades** tem identidade unica e ciclo de vida
 2. **Value Objects** sao imutaveis e comparados por valor
-3. **Aggregates** protegem invariantes e sao unidade de consistencia
-4. **Domain Services** contem logica que nao pertence a uma entidade
-5. **Repositories** sao interfaces definidas no dominio, implementadas na infra
+3. **Interfaces** sao definidas no dominio, implementadas na infra
+4. **Domain tem ZERO dependencias externas** (nem React, nem Prisma, nem Zod)
 
-### Linguagem Ubiqua
+### Linguagem Ubiqua (YouFluent)
 
 | Termo | Definicao no Dominio |
 |-------|---------------------|
-| {termo} | {definicao} |
+| Lesson | Licao gerada por IA para um chunk |
+| Chunk | Segmento de ~30s de um video |
+| Transcript | Transcricao completa de um video |
+| Exercise | Exercicio de pratica (multipla escolha, etc) |
+| Vocabulary | Item de vocabulario com definicao e exemplo |
 
 ---
 
@@ -42,10 +42,11 @@ domain/
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                  │
-│   Presentation ──► Application ──► Domain ◄── Infrastructure    │
-│                                      ▲                          │
-│                                      │                          │
-│                         Dependencias apontam para DENTRO        │
+│   presentation ──► application ──► domain ◄── infrastructure    │
+│        │                            ▲                            │
+│        │                            │                            │
+│        └────────────────────────────┘                            │
+│              Dependencias apontam para DENTRO                    │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -54,19 +55,41 @@ domain/
 
 | Camada | Pode Depender De | NAO Pode Depender De |
 |--------|------------------|---------------------|
-| Domain | Nada (0 deps externas) | Application, Infra, Presentation |
-| Application | Domain | Infrastructure, Presentation |
-| Infrastructure | Domain, Application | Presentation |
-| Presentation | Application | Domain direto, Infrastructure |
+| domain | Nada (0 deps externas) | application, infra, presentation |
+| application | domain | infrastructure, presentation |
+| infrastructure | domain, application | presentation |
+| presentation | application | domain direto*, infrastructure |
 
-### Estrutura de Diretorios
+> *Excecao: presentation pode importar TIPOS do domain para tipagem TypeScript
+
+### Estrutura por Feature
 
 ```
-src/
-├── domain/           # Regras de negocio puras
-├── application/      # Casos de uso (orquestra dominio)
-├── infrastructure/   # Implementacoes concretas (adapters)
-└── presentation/     # Interface com usuario/mundo externo
+features/lesson/
+├── domain/               # Regras de negocio puras
+│   ├── entities/
+│   │   └── lesson.ts     # class Lesson { ... }
+│   ├── interfaces/
+│   │   └── lesson-repository.ts  # interface LessonRepository
+│   └── errors/
+│       └── lesson-errors.ts
+│
+├── application/          # Casos de uso
+│   └── use-cases/
+│       ├── generate-lesson.ts    # GenerateLessonUseCase
+│       └── get-lesson.ts
+│
+├── infrastructure/       # Implementacoes concretas
+│   ├── repositories/
+│   │   └── prisma-lesson-repository.ts
+│   └── services/
+│       └── openai-lesson-generator.ts
+│
+└── presentation/         # UI
+    ├── components/
+    │   └── lesson-card.tsx
+    └── hooks/
+        └── use-lesson.ts
 ```
 
 ---
@@ -87,56 +110,102 @@ RED ──► GREEN ──► REFACTOR ──► (repeat)
 
 | Camada | Cobertura Minima | Tipo de Teste |
 |--------|------------------|---------------|
-| Domain | 100% | Unit |
-| Application | 90% | Unit |
-| Infrastructure | 80% | Integration |
-| Presentation | E2E criticos | E2E |
+| domain | 100% | Unit |
+| application | 90% | Unit |
+| infrastructure | 80% | Integration |
+| presentation | E2E criticos | E2E |
 
 ### Estrutura de Testes
 
 ```
 tests/
-├── unit/             # Sem I/O, rapidos
-│   ├── domain/
-│   └── application/
-├── integration/      # Com dependencias reais
-│   └── infrastructure/
-└── e2e/              # Ponta a ponta
-    └── api/
+├── unit/
+│   └── features/
+│       ├── lesson/
+│       │   ├── domain/
+│       │   └── application/
+│       ├── player/
+│       └── transcript/
+├── integration/
+│   └── api/
+└── e2e/
+    └── lesson-flow.spec.ts
+```
+
+### Comandos
+
+```bash
+# Unit tests
+pnpm test
+
+# Com coverage
+pnpm test:coverage
+
+# Integration tests
+pnpm test:integration
+
+# E2E tests
+pnpm test:e2e
+
+# Todos (CI)
+pnpm test:all
 ```
 
 ---
 
-## Padroes Adicionais (Opcionais)
+## Server-first (Next.js 16)
 
-### Repository Pattern
+### Regra Geral
 
-- Interface no Domain
-- Implementacao na Infrastructure
-- Injeta via Dependency Injection
+- **Server Components** sao o padrao (sem marcacao)
+- **Client Components** apenas quando necessario (`"use client"`)
 
-### Result Type
+### Quando usar Client Components
 
-```python
-# Nunca usar excecoes genericas
-# Sempre retornar Result[T, E]
+| Use Client | Exemplo |
+|------------|---------|
+| Hooks (useState, useEffect) | Estado local, side effects |
+| Event handlers (onClick) | Interatividade |
+| Browser APIs | localStorage, window |
+| Bibliotecas client-only | YouTube IFrame API |
 
-def get_user(id: str) -> Result[User, UserNotFoundError]:
-    ...
-```
+### Exemplo
 
-### Design by Contract
+```tsx
+// Server Component (padrao) - busca dados
+// app/(app)/lesson/[id]/page.tsx
+async function LessonPage({ params }) {
+  const lesson = await getLesson(params.id)  // Executa no servidor
+  return <LessonViewer lesson={lesson} />
+}
 
-```python
-def transfer(from_acc: str, to_acc: str, amount: Decimal) -> Result:
-    """
-    PRE: amount > 0, from_acc.balance >= amount
-    POST: from_acc.balance == OLD - amount
-    ERRORS: InsufficientFundsError, AccountNotFoundError
-    """
+// Client Component - interatividade
+// features/player/presentation/components/video-player.tsx
+"use client"
+import { useState } from 'react'
+
+function VideoPlayer({ videoId }) {
+  const [isPlaying, setIsPlaying] = useState(false)
+  // ...
+}
 ```
 
 ---
 
-*Baseado em: docs/PILARES.md*
-*Atualizado em: {data}*
+## Convencoes de Nomenclatura
+
+| Tipo | Convencao | Exemplo |
+|------|-----------|---------|
+| Entidades | PascalCase | `Lesson`, `VideoChunk` |
+| Interfaces | PascalCase (sem prefixo) | `LessonRepository` |
+| Implementacoes | Prefixo descritivo | `PrismaLessonRepository` |
+| Use Cases | Verbo + Substantivo | `GenerateLessonUseCase` |
+| Componentes | PascalCase | `LessonCard` |
+| Hooks | use + Nome | `useLesson` |
+| Arquivos | kebab-case | `lesson-card.tsx` |
+| Stores | use + Nome + Store | `useLessonStore` |
+
+---
+
+*Baseado em: docs/PILARES.md e FUNDACAO_V2.md*
+*Atualizado em: 2026-01-02*

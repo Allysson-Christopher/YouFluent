@@ -4,14 +4,76 @@
 
 Gera um PRP completo de forma **100% autonoma**.
 
-> ⚠️ **VERSÕES:** NÃO pesquisar versões de bibliotecas via WebSearch.
-> Usar versões já definidas em `context/ARQUITETURA/stack.md`.
-> A pesquisa de versões é responsabilidade EXCLUSIVA do `/gerar-arquitetura`.
+> **VERSOES:** NAO pesquisar versoes de bibliotecas via WebSearch.
+> Usar versoes ja definidas em `context/ARQUITETURA/stack.md`.
+> A pesquisa de versoes e responsabilidade EXCLUSIVA do `/gerar-arquitetura`.
 
 > **3 Modos de Operacao:**
 > - **AUTO** (sem argumentos): Detecta proxima tarefa via Git + TASKS/
 > - **TAREFA** (T-XXX): Usa tarefa especifica
 > - **LIVRE** ("descricao"): Descricao textual direta
+
+---
+
+## CONTEXTO DO PROJETO: YouFluent
+
+### Stack Tecnologica
+| Tecnologia | Versao |
+|------------|--------|
+| Next.js | 16.1.1+ |
+| React | 19.2.x |
+| TypeScript | 5.9.x |
+| Node.js | 20.19+ |
+| Prisma | 7.x (com @prisma/adapter-pg) |
+| PostgreSQL | 16 (Docker Compose) |
+| Zustand | 5.x |
+| Zod | latest |
+| Tailwind CSS | v4 |
+| shadcn/ui | 2.5.x |
+| OpenAI SDK | 6.1.x |
+| Vitest | 3.0.5+ |
+| Playwright | 1.55.1+ |
+| Testcontainers | latest |
+| MSW | 2.x |
+
+### Dominios do Projeto
+- **lesson** - Licoes geradas por IA
+- **player** - Player YouTube
+- **transcript** - Transcricoes e cache
+
+### Estrutura de Pastas (Feature-Clean)
+```
+src/
+├── app/                  # Next.js App Router (rotas apenas)
+├── features/             # Dominios organizados por feature
+│   ├── lesson/
+│   │   ├── domain/       # Entities, Value Objects, Interfaces
+│   │   ├── application/  # Use Cases
+│   │   ├── infrastructure/ # Repositories, Services
+│   │   └── presentation/ # Components, Hooks, Stores
+│   ├── player/
+│   └── transcript/
+├── shared/               # Codigo compartilhado
+│   ├── components/ui/    # shadcn/ui
+│   ├── lib/              # Prisma client, utils
+│   └── hooks/
+└── prisma/               # Schema e migrations
+```
+
+### Estrategia de Testes (TDD)
+| Camada | TDD | Cobertura | Ferramentas |
+|--------|-----|-----------|-------------|
+| Domain | Obrigatorio | 100% | Vitest |
+| Application | Recomendado | 80-90% | Vitest + mocks |
+| Infrastructure | Parcial | 60-80% | Vitest + Testcontainers + MSW |
+| Presentation | Nao | E2E apenas | Playwright |
+
+### Decisoes Arquiteturais (ADRs)
+- **ADR-001**: Next.js 16 como framework full-stack
+- **ADR-002**: Prisma 7 com Driver Adapters
+- **ADR-003**: Zustand para todo gerenciamento de estado
+- **ADR-004**: Cache de transcricoes no PostgreSQL
+- **ADR-005**: Estrategia de testes com TDD
 
 ---
 
@@ -31,7 +93,7 @@ Usa a tarefa especificada.
 
 ### 3. Modo LIVRE (descricao textual)
 ```bash
-/generate-prp "implementar autenticacao JWT com refresh tokens"
+/generate-prp "implementar cache de transcricoes no PostgreSQL"
 ```
 Cria PRP a partir de descricao livre.
 
@@ -89,8 +151,8 @@ O bloco de tags esta no formato:
 ## Tags de Contexto
 
 ```
-PRD: features/auth
-ARQUITETURA: dominios/user, decisoes/adr-001-db
+PRD: features/transcript
+ARQUITETURA: dominios/transcript, decisoes/adr-004-cache-postgres
 ```
 ```
 
@@ -99,8 +161,8 @@ ARQUITETURA: dominios/user, decisoes/adr-001-db
 1. Encontrar secao `## Tags de Contexto`
 2. Extrair conteudo do bloco de codigo
 3. Para cada linha `TIPO: arquivo1, arquivo2`:
-   - `PRD: features/auth` → `context/PRD/features/auth.md`
-   - `ARQUITETURA: dominios/user` → `context/ARQUITETURA/dominios/user.md`
+   - `PRD: features/transcript` → `context/PRD/features/transcript.md`
+   - `ARQUITETURA: dominios/transcript` → `context/ARQUITETURA/dominios/transcript.md`
 
 **Arquivos a carregar (em ordem):**
 
@@ -137,10 +199,12 @@ ls -d PRPs/[0-9]*/ 2>/dev/null | tail -1
 mkdir -p PRPs/{numero}-{slug}/
 ```
 
-Exemplos:
-- `PRPs/001-setup-nextjs/`
+Exemplos (YouFluent):
+- `PRPs/001-setup-nextjs-16/`
 - `PRPs/002-prisma-postgresql/`
-- `PRPs/003-autenticacao/`
+- `PRPs/003-transcript-domain/`
+- `PRPs/004-youtube-transcript-service/`
+- `PRPs/005-lesson-domain/`
 
 ### Fase 4: Pesquisa Profunda
 
@@ -156,11 +220,12 @@ Exemplos:
 - Encontrar exemplos de implementacao
 - Identificar best practices e pitfalls comuns
 
-**Identificacao de Gotchas:**
-- Quirks de bibliotecas
-- Limitacoes conhecidas
-- Consideracoes de seguranca
-- Padroes obrigatorios do projeto (DDD, Clean Architecture, TDD)
+**Identificacao de Gotchas (YouFluent):**
+- Prisma 7 requer Driver Adapters (@prisma/adapter-pg)
+- Next.js 16 Server Components por padrao
+- Tailwind v4 usa CSS-first config (sem tailwind.config.js)
+- Zustand stores ficam em `presentation/stores/`
+- TDD obrigatorio para domain (100% cobertura)
 
 ### Fase 5: ULTRATHINK + Geracao
 
@@ -185,8 +250,8 @@ O PRP DEVE conter todas as secoes:
 4. **What** - Comportamento e requisitos tecnicos
 5. **Documentation & References** - URLs, arquivos de contexto carregados, gotchas
 6. **Codebase Trees** - Atual e desejado
-7. **Implementation Blueprint** - Tasks ordenadas com pseudocodigo
-8. **Validation Loop** - 3 niveis (syntax, unit, integration)
+7. **Implementation Blueprint** - Tasks ordenadas com pseudocodigo TDD
+8. **Validation Loop** - 5 niveis (lint, types, unit, integration, build)
 9. **Final Checklist** - Criterios de conclusao (copiar da tarefa)
 10. **Anti-Patterns** - O que evitar
 
@@ -206,7 +271,8 @@ Adicionar secao no inicio do PRP:
 - context/PRD/_index.md
 - context/PRD/features/{feature}.md
 - context/ARQUITETURA/_index.md
-- context/ARQUITETURA/{arquivos}.md
+- context/ARQUITETURA/dominios/{dominio}.md
+- context/ARQUITETURA/decisoes/{adr}.md
 
 **Objetivo:** {objetivo da tarefa}
 
@@ -253,29 +319,31 @@ Proximo passo:
 
 ---
 
-## Validation Gates (Obrigatorios no PRP)
+## Validation Gates (YouFluent)
 
-Identificar a stack do projeto e incluir comandos apropriados:
+Incluir no PRP os comandos de validacao apropriados:
 
-**Python:**
 ```bash
-ruff check --fix && mypy . && pytest tests/ -v --cov --cov-fail-under=80
+# Nivel 1: Syntax & Style
+pnpm lint && pnpm format:check
+
+# Nivel 2: Type Check
+pnpm type-check
+
+# Nivel 3: Unit Tests (TDD)
+pnpm test:unit --coverage
+
+# Nivel 4: Integration Tests
+pnpm test:integration
+
+# Nivel 5: Build
+pnpm build
 ```
 
-**Node.js/TypeScript:**
-```bash
-npm run lint && npm run type-check && npm test
-```
-
-**Go:**
-```bash
-go fmt ./... && go vet ./... && go test ./...
-```
-
-**Rust:**
-```bash
-cargo fmt --check && cargo clippy && cargo test
-```
+**Cobertura minima:**
+- Domain: 100%
+- Application: 80%
+- Infrastructure: 60%
 
 ---
 
@@ -292,8 +360,9 @@ Antes de finalizar, verificar:
 - [ ] Modelo de dominio definido (entidades, VOs, regras)
 - [ ] Arquitetura Clean Architecture mapeada
 - [ ] Blueprint TDD (teste primeiro para cada componente)
-- [ ] Validation gates executaveis
+- [ ] Validation gates executaveis (pnpm)
 - [ ] Criterios de conclusao objetivos (copiados da tarefa)
+- [ ] Decisoes do projeto respeitadas (Zustand, Zod, Server-first)
 
 ---
 
@@ -310,7 +379,7 @@ Ao finalizar, atribuir nota de 1-10:
 
 ---
 
-## Exemplos de Uso
+## Exemplos de Uso (YouFluent)
 
 ### Modo AUTO (mais comum)
 ```bash
@@ -322,17 +391,17 @@ Detecta que ultima tarefa foi T-003, gera PRP para T-004.
 ```bash
 /generate-prp T-005
 ```
-Gera PRP para tarefa especifica T-005.
+Gera PRP para tarefa especifica T-005 (YouTubeTranscriptService).
 
 ### Modo LIVRE
 ```bash
-/generate-prp "criar endpoint REST para CRUD de usuarios com validacao"
+/generate-prp "criar entidades de dominio para Transcript com VideoId, Chunk e Transcript"
 ```
 Gera PRP a partir de descricao.
 
 ### Modo INITIAL.md (retrocompatibilidade)
 ```bash
-/generate-prp PRPs/001-auth/INITIAL.md
+/generate-prp PRPs/001-setup/INITIAL.md
 ```
 Usa arquivo INITIAL.md existente.
 
@@ -347,3 +416,74 @@ Apos gerar o PRP, executar:
 ```
 
 Ou usar `/next` para fluxo completo automatizado (gera + executa + commit).
+
+---
+
+## Padroes a Seguir no PRP (YouFluent)
+
+### Domain Layer
+```typescript
+// Entidades com Result pattern
+export class Transcript {
+  private constructor(
+    public readonly id: string,
+    public readonly videoId: VideoId,
+    public readonly chunks: Chunk[]
+  ) {}
+
+  static create(props: CreateTranscriptProps): Result<Transcript, TranscriptError> {
+    // validacoes
+    return Result.ok(new Transcript(...))
+  }
+}
+```
+
+### Application Layer
+```typescript
+// Use case com injecao de dependencias
+export class FetchTranscriptUseCase {
+  constructor(
+    private readonly transcriptRepo: TranscriptRepository,
+    private readonly transcriptFetcher: TranscriptFetcher
+  ) {}
+
+  async execute(videoUrl: string): Promise<Result<Transcript, FetchError>> {
+    // 1. Verificar cache
+    // 2. Buscar do YouTube se nao cacheado
+    // 3. Salvar no cache
+    // 4. Retornar
+  }
+}
+```
+
+### Infrastructure Layer
+```typescript
+// Repository com Prisma
+export class PrismaTranscriptRepository implements TranscriptRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  async findByVideoId(videoId: VideoId): Promise<Transcript | null> {
+    const data = await this.prisma.transcript.findUnique({
+      where: { videoId: videoId.value },
+      include: { chunks: true }
+    })
+    return data ? TranscriptMapper.toDomain(data) : null
+  }
+}
+```
+
+### Presentation Layer
+```typescript
+// Server Component por padrao
+export default async function TranscriptPage({ params }: Props) {
+  const transcript = await fetchTranscript(params.videoId)
+  return <TranscriptViewer transcript={transcript} />
+}
+
+// Client Component apenas quando necessario
+'use client'
+export function VideoPlayer() {
+  const { isPlaying, play, pause } = usePlayerStore()
+  // ...
+}
+```
