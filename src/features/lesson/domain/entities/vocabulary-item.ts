@@ -105,6 +105,26 @@ export class VocabularyItem {
   }
 
   /**
+   * Reconstitute a VocabularyItem from persistence
+   *
+   * Used by mappers to reconstruct domain entities from database records.
+   * Skips validation as data comes from trusted source (database).
+   *
+   * @param props - VocabularyItem properties from database
+   * @returns VocabularyItem instance
+   */
+  static reconstitute(props: VocabularyItemProps): VocabularyItem {
+    return new VocabularyItem(
+      props.id,
+      props.word,
+      props.definition,
+      props.example,
+      props.partOfSpeech,
+      props.chunkIndex
+    )
+  }
+
+  /**
    * Compare two VocabularyItem instances by id
    *
    * @param other - VocabularyItem to compare with

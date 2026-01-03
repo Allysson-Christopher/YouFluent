@@ -112,6 +112,28 @@ export class Exercise {
   }
 
   /**
+   * Reconstitute an Exercise from persistence
+   *
+   * Used by mappers to reconstruct domain entities from database records.
+   * Skips validation as data comes from trusted source (database).
+   *
+   * @param props - Exercise properties from database
+   * @returns Exercise instance
+   */
+  static reconstitute(props: ExerciseProps): Exercise {
+    const frozenOptions = props.options ? Object.freeze([...props.options]) : null
+    return new Exercise(
+      props.id,
+      props.type,
+      props.question,
+      props.answer,
+      frozenOptions,
+      props.explanation,
+      props.chunkIndex
+    )
+  }
+
+  /**
    * Check if user's answer is correct
    *
    * @param userAnswer - User's provided answer

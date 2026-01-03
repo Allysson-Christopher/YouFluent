@@ -7,7 +7,7 @@
 
 // Entities
 export { Lesson } from './entities/lesson'
-export type { LessonProps } from './entities/lesson'
+export type { LessonProps, LessonReconstitutionProps } from './entities/lesson'
 export { Exercise } from './entities/exercise'
 export type { ExerciseProps } from './entities/exercise'
 export { VocabularyItem } from './entities/vocabulary-item'

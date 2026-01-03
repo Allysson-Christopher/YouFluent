@@ -5,6 +5,18 @@
  * These implement interfaces defined in the domain layer.
  */
 
+// Repositories
+export { PrismaLessonRepository } from './repositories/prisma-lesson-repository'
+
+// Mappers
+export { LessonMapper } from './mappers/lesson-mapper'
+export type {
+  PrismaLessonWithRelations,
+  PrismaExerciseData,
+  PrismaVocabularyData,
+  PrismaLessonData,
+} from './mappers/lesson-mapper'
+
 // Services
 export {
   OpenAILessonGenerator,

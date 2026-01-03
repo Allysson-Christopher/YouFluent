@@ -18,6 +18,13 @@ export interface LessonProps {
 }
 
 /**
+ * Lesson reconstitution properties (from database)
+ */
+export interface LessonReconstitutionProps extends LessonProps {
+  readonly createdAt: Date
+}
+
+/**
  * Lesson Aggregate Root
  *
  * Represents a complete lesson generated from a video transcript.
@@ -94,6 +101,33 @@ export class Lesson {
         frozenVocabulary,
         new Date()
       )
+    )
+  }
+
+  /**
+   * Reconstitute a Lesson from persistence
+   *
+   * Used by mappers to reconstruct domain entities from database records.
+   * Skips validation as data comes from trusted source (database).
+   *
+   * PRE: props contains all valid data from database
+   * POST: Returns Lesson instance with original createdAt
+   *
+   * @param props - Lesson reconstitution properties including createdAt
+   * @returns Lesson instance
+   */
+  static reconstitute(props: LessonReconstitutionProps): Lesson {
+    const frozenExercises = Object.freeze([...props.exercises])
+    const frozenVocabulary = Object.freeze([...props.vocabulary])
+
+    return new Lesson(
+      props.id,
+      props.videoId,
+      props.title,
+      props.difficulty,
+      frozenExercises,
+      frozenVocabulary,
+      props.createdAt
     )
   }
 
