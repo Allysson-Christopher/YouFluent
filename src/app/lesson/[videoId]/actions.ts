@@ -1,48 +1,22 @@
 'use server'
 
 import prisma from '@/shared/lib/prisma'
-import { Difficulty } from '@/features/lesson/domain/value-objects/difficulty'
-import { GenerateLessonUseCase } from '@/features/lesson/application/use-cases/generate-lesson'
 import { FetchTranscriptUseCase } from '@/features/transcript/application/use-cases/fetch-transcript'
 import { ChunkTranscriptUseCase } from '@/features/transcript/application/use-cases/chunk-transcript'
-import { PrismaLessonRepository } from '@/features/lesson/infrastructure/repositories/prisma-lesson-repository'
 import { PrismaTranscriptRepository } from '@/features/transcript/infrastructure/repositories/prisma-transcript-repository'
-import { YouTubeTranscriptService } from '@/features/transcript/infrastructure/services/youtube-transcript-service'
-import { OpenAILessonGenerator } from '@/features/lesson/infrastructure/services/openai-lesson-generator'
+import { SupadataTranscriptService } from '@/features/transcript/infrastructure/services/supadata-transcript-service'
 
 /**
- * DTO for lesson action result (serializable)
+ * DTO for transcript action result (serializable)
+ * Simplified for chunk-by-chunk lesson approach (like original Python version)
  */
-export interface LessonActionResult {
+export interface TranscriptActionResult {
   success: boolean
   error?: {
     type: string
     message: string
   }
   data?: {
-    lesson: {
-      id: string
-      videoId: string
-      title: string
-      difficulty: 'easy' | 'medium' | 'hard'
-      exercises: Array<{
-        id: string
-        type: string
-        question: string
-        options: string[] | null
-        answer: string
-        explanation: string
-        chunkIndex: number
-      }>
-      vocabulary: Array<{
-        id: string
-        word: string
-        definition: string
-        example: string
-        partOfSpeech: string
-        chunkIndex: number
-      }>
-    }
     transcript: {
       id: string
       videoId: string
@@ -55,36 +29,27 @@ export interface LessonActionResult {
         endTime: number
         text: string
       }>
-    } | null
+    }
   }
 }
 
 /**
- * Generate Lesson Server Action
+ * Fetch Transcript Server Action
  *
- * Orchestrates lesson generation using domain use cases.
- * Serializes entities for client consumption.
+ * Fetches transcript and creates chunks.
+ * Lesson content is generated per-chunk on-demand via /api/chunk-lesson.
+ * This matches the original Python version behavior.
  *
- * PRE: videoId is 11-char string, difficultyStr is easy|medium|hard
- * POST: Returns LessonActionResult
+ * PRE: videoId is 11-char string
+ * POST: Returns TranscriptActionResult with chunks
  */
-export async function generateLesson(
-  videoId: string,
-  difficultyStr: string
-): Promise<LessonActionResult> {
+export async function fetchTranscriptAction(
+  videoId: string
+): Promise<TranscriptActionResult> {
   try {
-    // Parse difficulty
-    const difficultyResult = Difficulty.fromString(difficultyStr)
-    if (difficultyResult.isFailure) {
-      return {
-        success: false,
-        error: { type: 'INVALID_DIFFICULTY', message: 'Invalid difficulty level' }
-      }
-    }
-
     // Build dependencies (Composition Root)
     const transcriptRepo = new PrismaTranscriptRepository(prisma)
-    const transcriptFetcher = new YouTubeTranscriptService()
+    const transcriptFetcher = new SupadataTranscriptService()
     const chunker = new ChunkTranscriptUseCase()
 
     const fetchTranscript = new FetchTranscriptUseCase(
@@ -93,93 +58,46 @@ export async function generateLesson(
       chunker
     )
 
-    const lessonRepo = new PrismaLessonRepository(prisma)
-    const lessonGenerator = new OpenAILessonGenerator()
-
-    const generateLessonUseCase = new GenerateLessonUseCase(
-      lessonRepo,
-      fetchTranscript,
-      lessonGenerator
-    )
-
     // Execute use case
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`
-    const lessonResult = await generateLessonUseCase.execute({
-      videoUrl,
-      difficulty: difficultyResult.value
-    })
+    const transcriptResult = await fetchTranscript.execute(videoUrl)
 
-    if (lessonResult.isFailure) {
+    if (transcriptResult.isFailure) {
       return {
         success: false,
         error: {
-          type: lessonResult.error.constructor.name,
-          message: 'message' in lessonResult.error
-            ? lessonResult.error.message
-            : 'Failed to generate lesson'
+          type: transcriptResult.error.constructor.name,
+          message: 'message' in transcriptResult.error
+            ? transcriptResult.error.message
+            : 'Failed to fetch transcript'
         }
       }
     }
 
-    const lesson = lessonResult.value
+    const transcript = transcriptResult.value
 
-    // Also fetch transcript for chunks (may be cached)
-    const transcriptResult = await fetchTranscript.execute(videoUrl)
-
-    // Serialize lesson for client
-    const serializedLesson = {
-      id: lesson.id,
-      videoId: lesson.videoId.value,
-      title: lesson.title,
-      difficulty: lesson.difficulty.value,
-      exercises: lesson.exercises.map(e => ({
-        id: e.id,
-        type: e.type.value,
-        question: e.question,
-        options: e.options ? [...e.options] : null,
-        answer: e.answer,
-        explanation: e.explanation,
-        chunkIndex: e.chunkIndex,
-      })),
-      vocabulary: lesson.vocabulary.map(v => ({
-        id: v.id,
-        word: v.word,
-        definition: v.definition,
-        example: v.example,
-        partOfSpeech: v.partOfSpeech,
-        chunkIndex: v.chunkIndex,
-      })),
-    }
-
-    // Serialize transcript if available
-    let serializedTranscript = null
-    if (transcriptResult.isSuccess) {
-      const transcript = transcriptResult.value
-      serializedTranscript = {
-        id: transcript.id,
-        videoId: transcript.videoId.value,
-        title: transcript.title,
-        language: transcript.language,
-        chunks: transcript.chunks.map(c => ({
-          id: c.id,
-          index: c.index,
-          startTime: c.startTime,
-          endTime: c.endTime,
-          text: c.text,
-        })),
-      }
-    }
-
+    // Serialize transcript for client
     return {
       success: true,
       data: {
-        lesson: serializedLesson,
-        transcript: serializedTranscript,
+        transcript: {
+          id: transcript.id,
+          videoId: transcript.videoId.value,
+          title: transcript.title,
+          language: transcript.language,
+          chunks: transcript.chunks.map(c => ({
+            id: c.id,
+            index: c.index,
+            startTime: c.startTime,
+            endTime: c.endTime,
+            text: c.text,
+          })),
+        }
       }
     }
 
   } catch (error) {
-    console.error('generateLesson error:', error)
+    console.error('fetchTranscriptAction error:', error)
     return {
       success: false,
       error: {

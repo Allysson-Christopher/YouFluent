@@ -97,6 +97,15 @@ interface PlayerStoreState {
 
   /** Seek to a specific chunk by index */
   seekToChunk: (index: number) => void
+
+  /** Play current chunk from start */
+  playCurrentChunk: () => void
+
+  /** Go to next chunk and play */
+  nextChunk: () => void
+
+  /** Go to previous chunk and play */
+  previousChunk: () => void
 }
 
 /**
@@ -138,13 +147,19 @@ export const usePlayerStore = create<PlayerStoreState>((set, get) => ({
   setPlaying: (isPlaying) => set({ isPlaying }),
 
   setCurrentTime: (currentTime) => {
-    const { chunks } = get()
+    const { chunks, activeChunkIndex: prevIndex, adapter, isPlaying } = get()
     let activeChunkIndex = -1
 
     if (chunks.length > 0) {
       activeChunkIndex = chunks.findIndex(
         (chunk) => currentTime >= chunk.startTime && currentTime < chunk.endTime
       )
+
+      // Auto-pause at chunk end (like original Python version)
+      // When playing and we cross into the next chunk, pause the video
+      if (isPlaying && prevIndex >= 0 && activeChunkIndex !== prevIndex) {
+        adapter?.pause()
+      }
     }
 
     set({ currentTime, activeChunkIndex })
@@ -194,6 +209,40 @@ export const usePlayerStore = create<PlayerStoreState>((set, get) => ({
     if (chunk && adapter) {
       adapter.seekTo(chunk.startTime)
       set({ activeChunkIndex: index })
+    }
+  },
+
+  playCurrentChunk: () => {
+    const { chunks, activeChunkIndex, adapter } = get()
+    const chunk = chunks[activeChunkIndex]
+
+    if (chunk && adapter) {
+      adapter.seekTo(chunk.startTime)
+      adapter.play()
+    }
+  },
+
+  nextChunk: () => {
+    const { chunks, activeChunkIndex, adapter } = get()
+    const nextIndex = activeChunkIndex + 1
+
+    if (nextIndex < chunks.length && adapter) {
+      const chunk = chunks[nextIndex]
+      adapter.seekTo(chunk.startTime)
+      set({ activeChunkIndex: nextIndex })
+      adapter.play()
+    }
+  },
+
+  previousChunk: () => {
+    const { chunks, activeChunkIndex, adapter } = get()
+    const prevIndex = activeChunkIndex - 1
+
+    if (prevIndex >= 0 && adapter) {
+      const chunk = chunks[prevIndex]
+      adapter.seekTo(chunk.startTime)
+      set({ activeChunkIndex: prevIndex })
+      adapter.play()
     }
   },
 }))

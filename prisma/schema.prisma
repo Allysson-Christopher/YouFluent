@@ -21,6 +21,7 @@ model Transcript {
   fullText  String   @db.Text
   createdAt DateTime @default(now())
   chunks    Chunk[]
+  chunkLessons ChunkLesson[]
 
   @@index([videoId])
 }
@@ -38,9 +39,50 @@ model Chunk {
 }
 
 // ====================
-// LESSON DOMAIN (T-013)
+// LESSON DOMAIN (Refactored to match original Python version)
 // ====================
 
+// ChunkLesson: Generated content for a single chunk
+// Matches original: translation, explanation, vocabulary (2-4), exercise (1)
+model ChunkLesson {
+  id           String   @id @default(cuid())
+  chunkIndex   Int
+  translation  String   @db.Text  // Portuguese translation
+  explanation  String   @db.Text  // Grammar/expression explanation
+  createdAt    DateTime @default(now())
+
+  transcriptId String
+  transcript   Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+
+  vocabulary ChunkVocabulary[]
+  exercise   ChunkExercise?
+
+  @@unique([transcriptId, chunkIndex])
+  @@index([transcriptId])
+}
+
+model ChunkVocabulary {
+  id            String @id @default(cuid())
+  word          String
+  meaning       String @db.Text  // Portuguese meaning (simpler than "definition")
+
+  chunkLessonId String
+  chunkLesson   ChunkLesson @relation(fields: [chunkLessonId], references: [id], onDelete: Cascade)
+
+  @@index([chunkLessonId])
+}
+
+model ChunkExercise {
+  id            String   @id @default(cuid())
+  question      String   @db.Text  // Question in Portuguese
+  options       String[]            // 4 options
+  correctIndex  Int                 // Index 0-3 of correct answer
+
+  chunkLessonId String   @unique
+  chunkLesson   ChunkLesson @relation(fields: [chunkLessonId], references: [id], onDelete: Cascade)
+}
+
+// Legacy models kept for backwards compatibility (can be removed later)
 model Lesson {
   id         String   @id @default(cuid())
   videoId    String   @unique

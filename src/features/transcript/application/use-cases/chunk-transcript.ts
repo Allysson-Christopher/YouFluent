@@ -10,7 +10,7 @@ import { Chunk, type RawTranscriptSegment } from '../../domain'
  * POST: Returns array of Chunk entities with sequential indexes
  */
 export class ChunkTranscriptUseCase {
-  private static readonly DEFAULT_TARGET_DURATION = 30 // seconds
+  private static readonly DEFAULT_TARGET_DURATION = 10 // seconds (matches original Python version)
 
   /**
    * Execute chunking algorithm
