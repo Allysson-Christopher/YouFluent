@@ -2,7 +2,7 @@
 
 ## Input: $ARGUMENTS
 
-Gera um PRP completo de forma **100% autonoma**.
+Gera um PRP completo de forma **100% autonoma** e faz **commit do PRP gerado**.
 
 > **VERSOES:** NAO pesquisar versoes de bibliotecas via WebSearch.
 > Usar versoes ja definidas em `context/ARQUITETURA/stack.md`.
@@ -285,6 +285,49 @@ Adicionar secao no inicio do PRP:
 ---
 ```
 
+### Fase 7: Commit do PRP Gerado
+
+**OBRIGATORIO: Fazer commit do PRP gerado.**
+
+1. Verificar arquivos criados:
+```bash
+git status
+```
+
+2. Adicionar e commitar:
+```bash
+git add PRPs/{numero}-{slug}/
+
+git commit -m "$(cat <<'EOF'
+docs(T-XXX): Generate PRP for {nome da tarefa}
+
+## Roadmap Progress
+Task atual: [T-XXX] - {Nome}
+Status: PRP GERADO
+Proxima etapa: /execute-prp PRPs/{numero}-{slug}/PRP.md
+
+## PRP Details
+- Modo: {AUTO | TAREFA | LIVRE}
+- Arquivo: PRPs/{numero}-{slug}/PRP.md
+- Nota de confianca: {X}/10
+
+## Contexto Carregado
+- {lista de arquivos de contexto}
+
+## Validation Gates Definidos
+- Lint + Format
+- Type-check
+- Unit tests (Domain 100%, Application 80%)
+- Integration tests
+- Build
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+```
+
 ---
 
 ## Output
@@ -301,12 +344,14 @@ PRPs/{numero}-{slug}/
 Ao finalizar, exibir:
 
 ```
-PRP GERADO COM SUCESSO
+PRP GERADO E COMMITADO
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
 Modo: {AUTO | TAREFA | LIVRE}
 Tarefa: T-XXX - {nome}
 Arquivo: PRPs/{numero}-{slug}/PRP.md
+
+Commit: {hash} - docs(T-XXX): Generate PRP for {nome}
 
 Contexto carregado:
 - {lista de arquivos}
@@ -363,6 +408,7 @@ Antes de finalizar, verificar:
 - [ ] Validation gates executaveis (pnpm)
 - [ ] Criterios de conclusao objetivos (copiados da tarefa)
 - [ ] Decisoes do projeto respeitadas (Zustand, Zod, Server-first)
+- [ ] **Commit do PRP realizado**
 
 ---
 
@@ -409,13 +455,13 @@ Usa arquivo INITIAL.md existente.
 
 ## Proximo Passo
 
-Apos gerar o PRP, executar:
+Apos gerar e commitar o PRP, executar:
 
 ```bash
 /execute-prp PRPs/{numero}-{slug}/PRP.md
 ```
 
-Ou usar `/next` para fluxo completo automatizado (gera + executa + commit).
+Ou usar `/next` para fluxo completo automatizado (gera + executa).
 
 ---
 

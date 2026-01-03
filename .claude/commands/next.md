@@ -3,7 +3,7 @@
 Executa automaticamente a proxima tarefa do inicio ao fim.
 
 > **100% Autonomo:** Sem perguntas, sem confirmacoes.
-> **Duas Tasks Sequenciais:** Uma para gerar PRP, outra para executar.
+> **Duas Etapas:** Gera PRP (com commit) → Executa PRP (com commit)
 
 ---
 
@@ -70,6 +70,7 @@ Task(
 - Isolamento: cada fase tem seu proprio contexto
 - Resiliencia: falha em uma fase nao polui a outra
 - Clareza: resultado de cada fase e visivel
+- **Commits separados:** PRP commitado na geracao, implementacao commitada na execucao
 
 **NAO execute os passos diretamente na conversa principal.**
 
@@ -84,6 +85,7 @@ Conversa Principal
 ┌─────────────────────────────────────┐
 │ Task 1: /generate-prp               │
 │ (detecta tarefa + carrega contexto) │
+│ → Gera PRP + COMMIT do PRP          │
 │ → Retorna: PRPs/XXX-slug/PRP.md     │
 └────────────────┬────────────────────┘
                  │
@@ -91,8 +93,9 @@ Conversa Principal
                  │
 ┌─────────────────────────────────────┐
 │ Task 2: /execute-prp {PRP.md}       │
-│ (implementa TDD + valida + commit)  │
-│ → Retorna: commit hash, arquivos    │
+│ (implementa TDD + valida)           │
+│ → Implementa + COMMIT completo      │
+│ → Retorna: hash, arquivos, testes   │
 └────────────────┬────────────────────┘
                  │
                  ▼
@@ -106,7 +109,7 @@ Conversa Principal
 ## Prompt do Agente 1 (Generate PRP)
 
 ```
-Voce e um agente autonomo. Sua UNICA tarefa e gerar o PRP.
+Voce e um agente autonomo. Sua UNICA tarefa e gerar o PRP e commita-lo.
 
 ## Contexto do Projeto: YouFluent
 
@@ -122,6 +125,7 @@ O comando ira:
 1. Detectar proxima tarefa via Git + TASKS/_index.md
 2. Carregar contexto via Tags de Contexto
 3. Gerar PRP completo em PRPs/{numero}-{slug}/PRP.md
+4. **FAZER COMMIT do PRP gerado** (docs(T-XXX): Generate PRP for ...)
 
 Lembre-se:
 - NAO pesquisar versoes de bibliotecas (usar context/ARQUITETURA/stack.md)
@@ -136,6 +140,7 @@ Ao finalizar, retorne EXATAMENTE neste formato:
 PRP_PATH: PRPs/{numero}-{slug}/PRP.md
 TASK_ID: T-XXX
 TASK_NAME: Nome da tarefa
+COMMIT_HASH: {hash do commit do PRP}
 STATUS: SUCESSO ou FALHA
 ERRO: (apenas se falhou)
 ```
@@ -145,7 +150,7 @@ ERRO: (apenas se falhou)
 ## Prompt do Agente 2 (Execute PRP)
 
 ```
-Voce e um agente autonomo. Sua UNICA tarefa e executar o PRP.
+Voce e um agente autonomo. Sua UNICA tarefa e executar o PRP e commita-lo.
 
 ## Contexto do Projeto: YouFluent
 
@@ -167,7 +172,11 @@ O comando ira:
    - Presentation: Server-first, sem TDD
 2. Validar (pnpm lint, pnpm type-check, pnpm test, pnpm build)
 3. Atualizar PRP com pos-implementacao
-4. Fazer commit com formato padrao
+4. **FAZER COMMIT COMPLETO** seguindo docs/git-docs/git-workflow.md
+   - Todas as secoes obrigatorias
+   - TDD Cycle documentado
+   - Erros encontrados
+   - Proxima tarefa identificada
 
 Lembre-se:
 - NAO pular validacao - todos os gates devem passar
@@ -175,6 +184,7 @@ Lembre-se:
 - Server Components por padrao
 - Zustand para estado local
 - Zod para validacao de inputs
+- Commit DEVE ter todas as secoes do git-workflow.md
 
 ## Retorno OBRIGATORIO
 
@@ -185,9 +195,10 @@ TASK_NAME: Nome da tarefa
 ARQUIVOS_CRIADOS: (lista)
 ARQUIVOS_MODIFICADOS: (lista)
 TESTES: {N} passando (Domain: X%, Application: Y%)
-COMMIT_HASH: abc1234
+COMMIT_HASH: {hash do commit da implementacao}
 STATUS: SUCESSO ou FALHA
 ERRO: (apenas se falhou)
+PROXIMA_TAREFA: T-XXX+1 - {nome}
 ```
 
 ---
@@ -222,6 +233,10 @@ TAREFA CONCLUIDA
 Tarefa: T-XXX - {nome}
 PRP: PRPs/{numero}-{slug}/PRP.md
 
+Commits:
+1. {hash1} - docs(T-XXX): Generate PRP for {nome}
+2. {hash2} - feat(T-XXX): {descricao}
+
 Arquivos criados:
 - {lista}
 
@@ -239,9 +254,6 @@ Validacao:
 - [x] Unit tests: passou
 - [x] Build: passou
 
-Commit: {hash}
-Mensagem: feat(T-XXX): {descricao}
-
 Proxima tarefa: T-XXX+1 - {nome}
 
 Para continuar:
@@ -253,9 +265,10 @@ Para continuar:
 ## Notas
 
 - **Duas Tasks sequenciais:** Task 2 so inicia apos Task 1 concluir com sucesso
+- **Dois commits:** PRP commitado na geracao, implementacao commitada na execucao
 - **Zero interacao:** Agentes executam sem perguntas
-- **Git e a fonte de verdade:** Commit registra progresso
-- **Capturar PRP_PATH:** Essencial para passar da Task 1 para Task 2
+- **Git e a fonte de verdade:** Commits registram progresso
 - **TDD por camada:** Domain 100%, Application 80%, Infrastructure 60%
 - **Server-first:** Server Components por padrao
 - **Zustand para estado:** Nao usar React Query, SWR ou tRPC
+- **Commit completo:** Todas as secoes do git-workflow.md na implementacao

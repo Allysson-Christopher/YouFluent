@@ -198,24 +198,31 @@ Adicionar secao no final do PRP.md:
 {decisoes durante implementacao}
 ```
 
-### Fase 6: Commit
+### Fase 6: Commit (OBRIGATORIO)
 
-**Ler `docs/git-docs/git-workflow.md` para formato completo.**
+**IMPORTANTE: Seguir o padrao de `docs/git-docs/git-workflow.md`**
 
-1. Verificar status e diff:
+#### 6.1 Verificar Status
+
 ```bash
 git status
 git diff --staged
+git log -3 --oneline
 ```
 
-2. Identificar proxima tarefa:
-   - Ler `context/TASKS/_index.md`
-   - Encontrar tarefa seguinte na ordem de execucao
+#### 6.2 Identificar Proxima Tarefa
 
-3. Criar commit seguindo padrao:
+1. Ler `context/TASKS/_index.md`
+2. Encontrar tarefa seguinte na ordem de execucao
+3. Capturar ID e nome da proxima tarefa
+
+#### 6.3 Criar Commit Completo
+
+**O commit DEVE seguir o template do git-workflow.md com TODAS as secoes:**
 
 ```bash
-git add .
+git add -A
+
 git commit -m "$(cat <<'EOF'
 feat(T-XXX): {descricao da tarefa}
 
@@ -223,24 +230,65 @@ feat(T-XXX): {descricao da tarefa}
 Task atual: [T-XXX] - {Nome}
 Status: COMPLETA
 Proxima task: [T-XXX+1] - {Nome da proxima}
+Fase: {fase do TASKS/_index.md}
+Progresso da fase: {X}/{Y} tasks completas
 
-## Changes
-- {lista de mudancas principais}
+## Contexto
+{Por que essa mudanca foi necessaria? Qual problema resolve?}
 
-## Files Changed
-- {arquivos modificados}
+## Implementacao
+{Como foi implementado tecnicamente?}
+- {Bullet points das principais decisoes}
 
-## Validation
-- Lint: passou
-- Type-check: passou
-- Tests: {N} passando (Domain: 100%, App: 80%+)
-- Build: passou
+## TDD Cycle
+- 🔴 RED: {N} testes criados, todos falhando inicialmente
+- 🟢 GREEN: Implementacao minima para passar os testes
+- 🔵 REFACTOR: {O que foi refatorado apos testes passarem}
 
-🤖 Generated with Claude Code
+## Erros Encontrados Durante Implementacao
+{Liste TODOS os erros encontrados e solucoes, ou "Nenhum erro encontrado"}
+
+## Decisoes de Design
+{Escolhas arquiteturais e trade-offs}
+- {Decisao 1}
+- {Decisao 2}
+
+## Testes
+- Testes unitarios: {caminho dos arquivos de teste}
+  - {Lista de testes criados}
+- Cobertura alcancada:
+  - Domain: {X}%
+  - Application: {Y}%
+  - Infrastructure: {Z}%
+- Comando: pnpm test:unit
+
+## Arquivos Modificados
+- {arquivo 1} - {o que foi feito}
+- {arquivo 2} - {o que foi feito}
+
+## Proximos Passos / TODOs
+{Pendencias ou "Nenhuma pendencia nesta task"}
+
+PROXIMA TASK (TASKS.md):
+[T-XXX+1]: {Nome da proxima tarefa}
+Checklist da proxima task:
+- [ ] {Item 1 da proxima tarefa}
+- [ ] {Item 2 da proxima tarefa}
+
+## Referencias
+- {Links relevantes, docs, etc}
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 Co-Authored-By: Claude <noreply@anthropic.com>
 EOF
 )"
+```
+
+#### 6.4 Verificar Commit
+
+```bash
+git log -1 --format=fuller
 ```
 
 ### Fase 7: Reportar Conclusao
@@ -264,6 +312,11 @@ Cobertura:
 Commit: {hash} - feat(T-XXX): {descricao}
 
 Proxima tarefa: T-XXX+1 - {nome}
+
+Para continuar:
+/next
+ou
+/generate-prp
 ```
 
 ---
@@ -278,7 +331,7 @@ Proxima tarefa: T-XXX+1 - {nome}
 
 ### Se commit falhar (pre-commit hooks):
 - Verificar arquivos modificados pelos hooks
-- Se safe, fazer amend
+- Se safe, fazer amend (APENAS se commit ainda nao foi pushado)
 - Se nao, criar novo commit
 
 ### Se nao conseguir implementar:
@@ -318,8 +371,9 @@ Antes de considerar completo:
 - [ ] TDD seguido (Domain 100%, Application 80%+)
 - [ ] Todos os validation gates passando
 - [ ] PRP atualizado com pos-implementacao
-- [ ] Commit feito com formato correto
+- [ ] Commit feito com formato completo (todas as secoes)
 - [ ] Proxima tarefa identificada no commit
+- [ ] Checklist da proxima tarefa incluida no commit
 
 ---
 
@@ -332,3 +386,4 @@ Antes de considerar completo:
 - **Server-first** - Server Components por padrao, "use client" apenas quando necessario
 - **Zustand para estado** - Nao usar React Query, SWR ou tRPC
 - **Zod para validacao** - Em API Routes e forms
+- **Commit completo** - Usar TODAS as secoes do git-workflow.md
